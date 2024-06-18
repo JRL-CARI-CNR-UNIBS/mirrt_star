@@ -92,7 +92,7 @@ public:
     ud_ = std::uniform_real_distribution<double>(0, 1);
   }
 
-  virtual bool config(const YAML::Node &config) override;
+  virtual bool config(const std::string& param_ns) override;
   virtual bool initGoalSelector() ;
   virtual bool update(PathPtr& solution) override;
 

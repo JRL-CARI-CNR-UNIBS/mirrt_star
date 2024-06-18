@@ -13,7 +13,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-            CXX_STANDARD 17
+            CXX_STANDARD 20
             CXX_EXTENSIONS OFF
             )
 target_compile_options(${PROJECT_NAME} PRIVATE
@@ -30,17 +30,27 @@ target_include_directories(${PROJECT_NAME}
 
 
 ## Install
-#install(DIRECTORY include/${PROJECT_NAME}
-#  DESTINATION include)
+install(DIRECTORY include/${PROJECT_NAME}
+ DESTINATION include)
 
-#install(
-#  TARGETS ${PROJECT_NAME}
-#  EXPORT ${PROJECT_NAME}Targets
-#  ARCHIVE DESTINATION lib#/${PROJECT_NAME}
-#  LIBRARY DESTINATION lib#/${PROJECT_NAME}
-#  RUNTIME DESTINATION bin#/${PROJECT_NAME}
-#)
+install(
+ TARGETS ${PROJECT_NAME}
+ EXPORT ${PROJECT_NAME}Targets
+ ARCHIVE DESTINATION lib#/${PROJECT_NAME}
+ LIBRARY DESTINATION lib#/${PROJECT_NAME}
+ RUNTIME DESTINATION bin#/${PROJECT_NAME}
+)
 
+install(EXPORT ${PROJECT_NAME}Targets
+  DESTINATION "share/${PROJECT_NAME}/cmake"
+  NAMESPACE ${PROJECT_NAME}::
+  FILE ${PROJECT_NAME}Targets.cmake
+)
+
+# install(FILES
+#   ${CMAKE_SOURCE_DIR}/cmake_config/${PROJECT_NAME}Config.cmake
+#   ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+#   DESTINATION "share/${PROJECT_NAME}/cmake")
 
 #set(EXPORT_CONFIGDIR "share/${PROJECT_NAME}/cmake")
 

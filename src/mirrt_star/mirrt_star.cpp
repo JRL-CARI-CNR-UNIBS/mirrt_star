@@ -232,64 +232,16 @@ bool MultigoalSolver::setProblem(const double &max_time)
   return true;
 }
 
-bool MultigoalSolver::config(const YAML::Node &config)
+bool MultigoalSolver::config(const std::string &param_ns)
 {
-  if (not TreeSolver::config(config))
+  if (not TreeSolver::config(param_ns))
     return false;
 
-  if (!config_["rewire_radius"])
-  {
-    CNR_WARN(logger_,"rewire_radius is not set. using 2.0*max_distance");
-    r_rewire_ = 2.0 * max_distance_;
-  }
-  else
-  {
-    r_rewire_ = config_["rewire_radius"].as<double>();
-  }
-
-  // Mixed Strategy
-  if (!config_["mixed_strategy"])
-  {
-    CNR_WARN(logger_,"mixed_strategy is not set. enable by default");
-    mixed_strategy_ = true;
-  }
-  else
-  {
-    mixed_strategy_ = config_["mixed_strategy"].as<bool>();
-  }
-
-  // Bidirectional
-  if (!config_["bidirectional"])
-  {
-    CNR_WARN(logger_,"bidirectional is not set. using true");
-    bidirectional_ = true;
-  }
-  else
-  {
-    bidirectional_ = config_["bidirectional"].as<bool>();
-  }
-
-  // K Nearest
-  if (!config_["k_nearest"])
-  {
-    CNR_WARN(logger_,"k_nearest is not set. using false (rewire using nodes in the radius)");
-    knearest_ = false;
-  }
-  else
-  {
-    knearest_ = config_["k_nearest"].as<bool>();
-  }
-
-  // Local Bias
-  if (!config_["local_bias"])
-  {
-    CNR_WARN(logger_,"local_bias is not set. using 0.3");
-    local_bias_ = 0.3;
-  }
-  else
-  {
-    local_bias_ = config_["local_bias"].as<double>();
-  }
+  get_param(logger_,param_ns_,"rewire_radius",r_rewire_,2.0 * max_distance_);
+  get_param(logger_,param_ns_,"mixed_strategy",mixed_strategy_,true);
+  get_param(logger_,param_ns_,"bidirectional",bidirectional_,true);
+  get_param(logger_,param_ns_,"k_nearest",knearest_,false);
+  get_param(logger_,param_ns_,"local_bias",local_bias_,0.3);
 
   if (local_bias_ < 0)
   {
@@ -302,16 +254,7 @@ bool MultigoalSolver::config(const YAML::Node &config)
     local_bias_ = 1.0;
   }
 
-  // Tube Radius
-  if (!config_["tube_radius"])
-  {
-    CNR_WARN(logger_,"tube_radius is not set. using 0.01");
-    tube_radius_ = 0.3;
-  }
-  else
-  {
-    tube_radius_ = config_["tube_radius"].as<double>();
-  }
+  get_param(logger_,param_ns_,"tube_radius",tube_radius_,0.3);
 
   if (tube_radius_ <= 0)
   {
@@ -319,16 +262,7 @@ bool MultigoalSolver::config(const YAML::Node &config)
     tube_radius_ = 0.01;
   }
 
-  // Forgetting Factor
-  if (!config_["forgetting_factor"])
-  {
-    CNR_WARN(logger_,"forgetting_factor is not set. using 0.01");
-    forgetting_factor_ = 0.01;
-  }
-  else
-  {
-    forgetting_factor_ = config_["forgetting_factor"].as<double>();
-  }
+  get_param(logger_,param_ns_,"forgetting_factor",forgetting_factor_,0.01);
 
   if (forgetting_factor_ <= 0)
   {
