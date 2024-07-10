@@ -1,0 +1,12 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(graph_core REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/mirrt_starTargets.cmake")
+
+set_and_check(@PROJECT_NAME@_INCLUDE_DIRS "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@" ${graph_core_INCLUDE_DIRS})
+set(@PROJECT_NAME@_LIBRARIES @PROJECT_NAME@ ${graph_core_LIBRARIES})
+
+check_required_components(@PROJECT_NAME@)
