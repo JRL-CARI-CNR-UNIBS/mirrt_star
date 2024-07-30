@@ -36,7 +36,9 @@ namespace multi_goal_selection
 class PolicyMAB: public PolicyBase
 {
 public:
-  PolicyMAB(const std::string& name, const int& n_goals) : PolicyBase(name, n_goals)
+  PolicyMAB(const std::string& name, const int& n_goals,
+            const cnr_logger::TraceLoggerPtr &logger) :
+    PolicyBase(name, n_goals,logger)
   {
     pull_counter_.resize(n_goals);
     std::fill(pull_counter_.begin(), pull_counter_.end(), 0);

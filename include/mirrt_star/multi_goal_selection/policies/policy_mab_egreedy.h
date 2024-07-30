@@ -18,50 +18,31 @@ protected:
   double reward_gain_;
   std::vector<int> pulled_arms_;
 
-
-  ros::Publisher eps_pub_ = nh_.advertise<std_msgs::Float64>("eps_greedy", 1000);
-  ros::Publisher reward_max_pub_ = nh_.advertise<std_msgs::Float64>("max_reward", 1000);
-  ros::Publisher reward_second_max_pub_ = nh_.advertise<std_msgs::Float64>("second_max_reward", 1000);
-  std_msgs::Float64 msg_;
+// @MARCO: essendo ros free non ci sono, ti servono? se si occorre pensare a un modo per portarli fuori
+//  ros::Publisher eps_pub_ = nh_.advertise<std_msgs::Float64>("eps_greedy", 1000);
+//  ros::Publisher reward_max_pub_ = nh_.advertise<std_msgs::Float64>("max_reward", 1000);
+//  ros::Publisher reward_second_max_pub_ = nh_.advertise<std_msgs::Float64>("second_max_reward", 1000);
+//  std_msgs::Float64 msg_;
 
 public:
-  PolicyMABEGreedy(const std::string& name, const int& n_goals) : PolicyMAB(name, n_goals)
+  PolicyMABEGreedy(const std::string& name,
+                   const int& n_goals,
+                   const cnr_logger::TraceLoggerPtr &logger) :
+    PolicyMAB(name, n_goals,logger)
   {
     pull_counter_ = std::vector<int>(n_goals_, 0);
     expected_reward_ = std::vector<double>(n_goals_, 0.0);
 
-    if (!nh_.getParam("epsilon_coef", epsilon_coef_))
+
+    get_param(logger_,name,"epsilon_coef",epsilon_coef_,0.2);
+    get_param(logger_,name,"reward_gain",reward_gain_,1.0);
+    get_param(logger_,name,"egreedy_forgetting_factor",egreedy_forgetting_factor_,0.0);
+    get_param(logger_,name,"egreedy_reward_forgetting_factor",egreedy_reward_forgetting_factor_,0.0);
+    get_param(logger_,name,"epsilon_exp",epsilon_exp_,1.0);
+
+    if(egreedy_forgetting_factor_!=0.0)
     {
-      ROS_ERROR("%s/epsilon_coef is not set. Deafult: 0.2",nh_.getNamespace().c_str());
-      epsilon_coef_=0.2;
-    }
-    if (!nh_.getParam("reward_gain", reward_gain_))
-    {
-      ROS_ERROR("%s/reward_gain is not set. Deafult: 1.0",nh_.getNamespace().c_str());
-      reward_gain_=1.0;
-    }
-    if (!nh_.getParam("egreedy_forgetting_factor", egreedy_forgetting_factor_))
-    {
-      ROS_ERROR("%s/egreedy_forgetting_factor is not set. Deafult: 0.0",nh_.getNamespace().c_str());
-      egreedy_forgetting_factor_=0.0;
-    }
-    else
-      ROS_ERROR("%s/egreedy_forgetting_factor set to %f",nh_.getNamespace().c_str(),egreedy_forgetting_factor_);
-    if (!nh_.getParam("egreedy_reward_forgetting_factor", egreedy_reward_forgetting_factor_))
-    {
-      ROS_ERROR("%s/egreedy_reward_forgetting_factor_ is not set. Deafult: 0.0",nh_.getNamespace().c_str());
-      egreedy_reward_forgetting_factor_=0.0;
-    }
-    else
-      ROS_ERROR("%s/egreedy_forgetting_factor set to %f",nh_.getNamespace().c_str(),egreedy_forgetting_factor_);
-    if (!nh_.getParam("epsilon_exp", epsilon_exp_))
-    {
-      ROS_ERROR("%s/epsilon_exp is not set. Deafult: 1.0",nh_.getNamespace().c_str());
-      epsilon_exp_=1.0;
-    }
-    else if(egreedy_forgetting_factor_!=0.0)
-    {
-      ROS_ERROR("egreedy_forgetting_factor_ > 0 and epsilon_exp < 1. Setting egreedy_forgetting_factor_=0.");
+      CNR_ERROR(logger_,"egreedy_forgetting_factor_ > 0 and epsilon_exp < 1. Setting egreedy_forgetting_factor_=0.");
       egreedy_forgetting_factor_=0.0;
     }
 
@@ -70,7 +51,11 @@ public:
              "egreedy_forgetting_factor_=%f, "
              "egreedy_reward_forgetting_factor_=%f, "
              "epsilon_exp_=%f",
-             epsilon_coef_, reward_gain_, egreedy_forgetting_factor_, egreedy_reward_forgetting_factor_, epsilon_exp_);
+             epsilon_coef_,
+             reward_gain_,
+             egreedy_forgetting_factor_,
+             egreedy_reward_forgetting_factor_,
+             epsilon_exp_);
 
   }
   
@@ -102,7 +87,6 @@ public:
 
   virtual void updateState(const int& i_goal, const double& reward)
   {
-//    ROS_ERROR("epsilon=%f", epsilon_coef_);
     if (epsilon_exp_<1.0)
       epsilon_coef_=epsilon_coef_*epsilon_exp_;
 
@@ -121,12 +105,14 @@ public:
     {
       epsilon_coef_=1-std::min((1-egreedy_forgetting_factor_)*(1-epsilon_coef_)+egreedy_forgetting_factor_*reward_gain_*reward,1.0);
     }
+
+    /* @MARCO: essendo ros free non ci sono, ti servono? se si occorre pensare a un modo per portarli fuori
+
     // publish to topic
 
     msg_.data = epsilon_coef_;
     eps_pub_.publish(msg_);
 
-//    ros::Duration(0.1).sleep();
 
     std::vector<double> tmp = expected_reward_;
     if (tmp.size()>=2)
@@ -138,6 +124,7 @@ public:
       msg_.data =  tmp[1];
       reward_second_max_pub_.publish(msg_);
     }
+    */
   }
 
   virtual std::string toString()

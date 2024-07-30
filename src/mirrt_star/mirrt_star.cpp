@@ -98,6 +98,8 @@ bool MultigoalSolver::addGoal(const NodePtr& goal_node, const double &max_time)
   NodePtr new_node;
 
   unsigned int index=goal_nodes_.size();
+
+  // TODO IF REALISE O BENCHMARK
   if (start_tree_->connectToNode(goal_node, new_node,max_time))
   {
     solution = std::make_shared<Path>(start_tree_->getConnectionToNode(goal_node), metrics_, checker_, logger_);
@@ -130,11 +132,14 @@ bool MultigoalSolver::addGoal(const NodePtr& goal_node, const double &max_time)
 
 
 
+  // da cnr_class_loader
   SamplerPtr sampler = std::make_shared<InformedSampler>(start_tree_->getRoot()->getConfiguration(),
                                                                  goal_node->getConfiguration(),
                                                                  sampler_->getLB(),
                                                                  sampler_->getUB(),
                                                                  logger_);
+
+
   TubeInformedSamplerPtr tube_sampler = std::make_shared<TubeInformedSampler>(sampler,metrics_);
   tube_sampler->setLocalBias(local_bias_);
   tube_sampler->setRadius(tube_radius_);

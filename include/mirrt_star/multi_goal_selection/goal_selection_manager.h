@@ -29,6 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <mirrt_star/multi_goal_selection/policies/policy_base.h>
 #include <mirrt_star/multi_goal_selection/rewards/reward_base.h>
 #include <cnr_logger/cnr_logger.h>
+#include <graph_core/util.h>
+
+using namespace graph::core;
+using namespace graph;
 
 namespace multi_goal_selection
 {

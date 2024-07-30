@@ -26,6 +26,11 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <graph_core/util.h>
+
+
+using namespace graph::core;
+using namespace graph;
 
 namespace multi_goal_selection
 {
@@ -33,11 +38,14 @@ namespace multi_goal_selection
 class RewardBase
 {
 public:
-  RewardBase(){};
+  RewardBase(const cnr_logger::TraceLoggerPtr &logger):
+    logger_(logger)
+  {};
 
   virtual double getReward(const std::vector<double>& costs, const std::vector<double>& utopias, const double& best_cost) = 0;
 
 protected:
+  cnr_logger::TraceLoggerPtr logger_;
   double last_best_cost_ = std::numeric_limits<double>::infinity();
 
 };

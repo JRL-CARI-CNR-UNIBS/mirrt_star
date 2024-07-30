@@ -34,7 +34,9 @@ namespace multi_goal_selection
 class RewardRelativeImprovement: public RewardBase
 {
 public:
-  RewardRelativeImprovement(){};
+  RewardRelativeImprovement(const cnr_logger::TraceLoggerPtr &logger):
+    RewardBase(logger)
+  {};
 
   double getReward(const std::vector<double>& costs, const std::vector<double>& utopias, const double& best_cost)
   {

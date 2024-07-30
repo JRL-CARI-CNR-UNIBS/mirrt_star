@@ -29,6 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <random>
 #include <time.h>
 #include <memory>
+#include <graph_core/util.h>
+
+using namespace graph::core;
+using namespace graph;
 
 namespace multi_goal_selection
 {
@@ -36,8 +40,11 @@ namespace multi_goal_selection
 class PolicyBase
 {
 public:
-  PolicyBase(const std::string& name, const int& n_goals):
-    gen_(time(0))
+  PolicyBase(const std::string& name,
+             const int& n_goals,
+             const cnr_logger::TraceLoggerPtr &logger):
+    gen_(time(0)),
+    logger_(logger)
   {
     n_goals_ = n_goals;
     goals_probabilities_.resize(n_goals_);
@@ -52,6 +59,7 @@ protected:
   int n_goals_ = 0;
   std::vector<double> goals_probabilities_;
   std::mt19937 gen_;
+  cnr_logger::TraceLoggerPtr logger_;
 };
 typedef std::shared_ptr<PolicyBase> PolicyBasePtr;
 
