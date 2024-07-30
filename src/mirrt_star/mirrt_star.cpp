@@ -286,7 +286,10 @@ bool MultigoalSolver::config(const std::string &param_ns)
 
 bool MultigoalSolver::initGoalSelector()
 {
-  goal_manager_ = std::make_shared<multi_goal_selection::GoalSelectionManager>(param_ns_, goal_nodes_.size(),sampler_->getDimension());
+  goal_manager_ = std::make_shared<multi_goal_selection::GoalSelectionManager>(param_ns_,
+                                                                               logger_,
+                                                                               goal_nodes_.size(),
+                                                                               sampler_->getDimension());
   if (goal_manager_->isWarmStartSet())
     goal_manager_->warmStart(costs_,utopias_,cost_);
   return true;
