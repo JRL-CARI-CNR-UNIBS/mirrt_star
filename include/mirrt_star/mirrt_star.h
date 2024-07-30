@@ -101,11 +101,15 @@ public:
   virtual bool addStartTree(const TreePtr& start_tree, const double &max_time = std::numeric_limits<double>::infinity()) override;
   virtual void resetProblem() override;
 
+  virtual bool finalizeProblem();
+
   std::vector<TreePtr> getGoalTrees();
 
   void cleanTree();
 
 };
+
+
 
 
 
