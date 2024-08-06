@@ -27,9 +27,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#include <mirrt_star/mirrt_star.h>
+#include <mirrt_star/solvers/mirrt_star.h>
 
 
+namespace graph
+{
 namespace mirrt_star
 {
 
@@ -217,14 +219,23 @@ void MultigoalSolver::resetProblem()
   goal_nodes_.clear();
   goal_trees_.clear();
   path_costs_.clear();
+  goal_costs_.clear();
   utopias_.clear();
+  costs_.clear();
   were_goals_sampled_.clear();
   goal_probabilities_.clear();
   solutions_.clear();
   tube_samplers_.clear();
+  samplers_.clear();
   status_.clear();
   start_tree_.reset();
   solved_=false;
+  can_improve_=true;
+  best_utopia_ = std::numeric_limits<double>::infinity();
+  path_cost_ = std::numeric_limits<double>::infinity();
+  goal_cost_ = std::numeric_limits<double>::infinity();
+  cost_=std::numeric_limits<double>::infinity();
+  cost_at_last_clean=std::numeric_limits<double>::infinity();
 }
 
 bool MultigoalSolver::finalizeProblem()
@@ -307,7 +318,7 @@ bool MultigoalSolver::update(PathPtr& solution)
   {
     CNR_DEBUG(logger_,"Find the final solution");
     solution=solution_;
-    completed_=true;
+    can_improve_=false;
     return false;
   }
 
@@ -643,9 +654,11 @@ void MultigoalSolver::cleanTree()
 }
 
 
+
 std::vector<TreePtr> MultigoalSolver::getGoalTrees()
 {
   return goal_trees_;
 }
 
-}  // namespace pathplan
+}  //  end namespace mirrt_star
+}  //  end namespace graph

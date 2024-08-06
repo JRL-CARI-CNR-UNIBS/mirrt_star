@@ -4,7 +4,8 @@ project(mirrt_star)
 find_package(graph_core REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED
-  src/${PROJECT_NAME}/mirrt_star.cpp
+  src/${PROJECT_NAME}/solvers/mirrt_star.cpp
+  src/${PROJECT_NAME}/plugins/solvers/mirrt_star_plugin.cpp
   src/${PROJECT_NAME}/multi_goal_selection/goal_selection_manager.cpp
   )
 target_include_directories(${PROJECT_NAME}

@@ -35,6 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace graph::core;
 using namespace graph;
 
+namespace graph
+{
 namespace mirrt_star
 {
 
@@ -82,11 +84,13 @@ protected:
   virtual void printMyself(std::ostream& os) const override;
 public:
 
+
   MultigoalSolver(const MetricsPtr& metrics,
                   const CollisionCheckerPtr& checker,
-                  const InformedSamplerPtr& sampler,
+                  const SamplerPtr& sampler,
+                  const GoalCostFunctionPtr& goal_cost_fcn,
                   const cnr_logger::TraceLoggerPtr& logger):
-    TreeSolver(metrics, checker, sampler, logger),
+    TreeSolver(metrics, checker, sampler, goal_cost_fcn, logger),
     gen_(time(0))
   {
     ud_ = std::uniform_real_distribution<double>(0, 1);
@@ -113,5 +117,5 @@ public:
 
 
 
-}  // namespace mirrt_star
-
+}  //  end namespace mirrt_star
+}  //  end namespace graph
