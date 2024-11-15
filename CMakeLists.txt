@@ -22,6 +22,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
             CXX_STANDARD 20
+            CMAKE_CXX_STANDARD_REQUIRED ON
             CXX_EXTENSIONS OFF
             )
 target_compile_options(${PROJECT_NAME} PRIVATE
