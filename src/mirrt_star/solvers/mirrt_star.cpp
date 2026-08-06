@@ -67,7 +67,7 @@ bool MultigoalSolver::addStartTree(const TreePtr &start_tree, const double &max_
   return true;
 }
 
-bool MultigoalSolver::addGoal(const NodePtr& goal_node, const double &max_time)
+bool MultigoalSolver::addGoal(const NodePtr& goal_node, const double &max_time, const double& additional_cost)
 {
   if (!start_tree_)
   {
@@ -75,7 +75,7 @@ bool MultigoalSolver::addGoal(const NodePtr& goal_node, const double &max_time)
     return false;
   }
 
-  double goal_cost=goal_cost_fcn_->cost(goal_node);
+  double goal_cost=goal_cost_fcn_->cost(goal_node)+additional_cost;
 
   double utopia=goal_cost+metrics_->utopia(goal_node,start_tree_->getRoot());
   if ((utopia)>cost_)
