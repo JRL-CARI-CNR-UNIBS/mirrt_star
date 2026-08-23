@@ -31,91 +31,100 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <graph_core/samplers/tube_informed_sampler.h>
 #include <mirrt_star/multi_goal_selection/goal_selection_manager.h>
 
-
 using namespace graph::core;
 using namespace graph;
 
 namespace graph
 {
-namespace mirrt_star
-{
-
-class MultigoalSolver;
-typedef std::shared_ptr<MultigoalSolver> MultigoalSolverPtr;
-
-class MultigoalSolver: public TreeSolver
-{
-protected:
-  enum GoalStatus { search, refine, done, discard};
-  std::vector<NodePtr> goal_nodes_;
-  std::vector<double> costs_;
-  std::vector<double> utopias_;
-  std::vector<double> goal_probabilities_;
-  std::vector<bool> were_goals_sampled_;
-  std::vector<PathPtr> solutions_;
-  std::vector<double> goal_costs_;
-  std::vector<double> path_costs_;
-
-  std::vector<TreePtr> goal_trees_;
-  std::vector<TubeInformedSamplerPtr> tube_samplers_;
-  std::vector<SamplerPtr> samplers_;
-  std::vector<GoalStatus> status_;
-
-  std::random_device rd_;
-  std::mt19937 gen_;
-  std::uniform_real_distribution<double> ud_;
-
-  double cost_at_last_clean=std::numeric_limits<double>::infinity();
-  int best_goal_index=-1;
-  double r_rewire_=1.;
-  double local_bias_=0.3;
-  double reward_=1.0;
-  double forgetting_factor_=0.999;
-  double tube_radius_=0.01;
-  double goal_bias_=0.05;
-  bool bidirectional_=true;
-  bool mixed_strategy_=true;
-  bool knearest_=false;
-  virtual bool setProblem(const double &max_time = std::numeric_limits<double>::infinity()) override;
-  bool isBestSolution(const int& index);
-
-  multi_goal_selection::GoalSelectionManagerPtr goal_manager_;
-
-  virtual void printMyself(std::ostream& os) const override;
-public:
-
-
-  MultigoalSolver(const MetricsPtr& metrics,
-                  const CollisionCheckerPtr& checker,
-                  const SamplerPtr& sampler,
-                  const GoalCostFunctionPtr& goal_cost_fcn,
-                  const cnr_logger::TraceLoggerPtr& logger):
-    TreeSolver(metrics, checker, sampler, goal_cost_fcn, logger),
-    gen_(time(0))
+  namespace mirrt_star
   {
-    ud_ = std::uniform_real_distribution<double>(0, 1);
-  }
 
-  virtual bool config(const std::string& param_ns) override;
-  virtual bool initGoalSelector() ;
-  virtual bool update(PathPtr& solution) override;
+    class MultigoalSolver;
+    typedef std::shared_ptr<MultigoalSolver> MultigoalSolverPtr;
 
-  virtual bool addStart(const NodePtr& start_node, const double &max_time = std::numeric_limits<double>::infinity()) override;
-  virtual bool addGoal(const NodePtr& goal_node, const double &max_time = std::numeric_limits<double>::infinity()) override;
-  virtual bool addStartTree(const TreePtr& start_tree, const double &max_time = std::numeric_limits<double>::infinity()) override;
-  virtual void resetProblem() override;
+    class MultigoalSolver : public TreeSolver
+    {
+    protected:
+      enum GoalStatus
+      {
+        search,
+        refine,
+        done,
+        discard
+      };
+      std::vector<NodePtr> goal_nodes_;
+      std::vector<double> costs_;
+      std::vector<double> utopias_;
+      std::vector<double> goal_probabilities_;
+      std::vector<bool> were_goals_sampled_;
+      std::vector<PathPtr> solutions_;
+      std::vector<double> goal_costs_;
+      std::vector<double> path_costs_;
 
-  virtual bool finalizeProblem();
+      std::vector<TreePtr> goal_trees_;
+      std::vector<TubeInformedSamplerPtr> tube_samplers_;
+      std::vector<SamplerPtr> samplers_;
+      std::vector<GoalStatus> status_;
 
-  std::vector<TreePtr> getGoalTrees();
+      std::random_device rd_;
+      std::mt19937 gen_;
+      std::uniform_real_distribution<double> ud_;
 
-  void cleanTree();
+      double cost_at_last_clean = std::numeric_limits<double>::infinity();
+      int best_goal_index = -1;
+      double r_rewire_ = 1.;
+      double local_bias_ = 0.3;
+      double reward_ = 1.0;
+      double forgetting_factor_ = 0.999;
+      double tube_radius_ = 0.01;
+      double goal_bias_ = 0.05;
+      bool bidirectional_ = true;
+      bool mixed_strategy_ = true;
+      bool knearest_ = false;
 
-};
+      double apple_weight_ = 10.0;
+      virtual bool setProblem(const double &max_time = std::numeric_limits<double>::infinity()) override;
+      bool isBestSolution(const int &index);
 
+      multi_goal_selection::GoalSelectionManagerPtr goal_manager_;
 
+      virtual void printMyself(std::ostream &os) const override;
 
+    public:
+      MultigoalSolver(const MetricsPtr &metrics,
+                      const CollisionCheckerPtr &checker,
+                      const SamplerPtr &sampler,
+                      const GoalCostFunctionPtr &goal_cost_fcn,
+                      const cnr_logger::TraceLoggerPtr &logger) : TreeSolver(metrics, checker, sampler, goal_cost_fcn, logger),
+                                                                  gen_(time(0))
+      {
+        ud_ = std::uniform_real_distribution<double>(0, 1);
+      }
 
+      virtual bool config(const std::string &param_ns) override;
+      virtual bool initGoalSelector();
+      virtual bool update(PathPtr &solution) override;
 
-}  //  end namespace mirrt_star
-}  //  end namespace graph
+      virtual bool addStart(const NodePtr &start_node, const double &max_time = std::numeric_limits<double>::infinity()) override;
+
+      virtual bool addGoal(const NodePtr &goal_node, const double &max_time = std::numeric_limits<double>::infinity(), const double &apple_cost = 0.0);
+      virtual bool addGoal(const NodePtr &goal_node, const double &max_time = std::numeric_limits<double>::infinity()) override
+      {
+        return addGoal(goal_node, max_time, 0.0);
+      }
+
+      virtual bool addStartTree(const TreePtr &start_tree, const double &max_time = std::numeric_limits<double>::infinity()) override;
+      virtual void resetProblem() override;
+
+      virtual bool finalizeProblem();
+
+      std::vector<TreePtr> getGoalTrees();
+      std::vector<NodePtr> getGoals()
+      {
+        return goal_nodes_;
+      }
+      void cleanTree();
+    };
+
+  } //  end namespace mirrt_star
+} //  end namespace graph
