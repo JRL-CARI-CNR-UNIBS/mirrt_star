@@ -71,6 +71,7 @@ namespace graph
       std::uniform_real_distribution<double> ud_;
 
       double cost_at_last_clean = std::numeric_limits<double>::infinity();
+      unsigned int iter_ = 0;
       int best_goal_index = -1;
       double r_rewire_ = 1.;
       double local_bias_ = 0.3;

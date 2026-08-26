@@ -52,7 +52,7 @@ namespace graph
       solved_ = false;
 
       setProblem(max_time);
-      CNR_DEBUG(logger_, "Add start goal");
+      CNR_WARN(logger_, "[MIRRT* Setup] Start configuration set: [ " << start_node->getConfiguration().transpose() << " ]");
       return true;
     }
 
@@ -62,6 +62,7 @@ namespace graph
       start_tree_ = start_tree;
       solved_ = false;
       setProblem(max_time);
+      CNR_WARN(logger_, "[MIRRT* Setup] Start tree initialized with " << start_tree_->getNumberOfNodes() << " nodes.");
       return true;
     }
 
@@ -74,29 +75,19 @@ namespace graph
       }
 
       double goal_cost = goal_cost_fcn_->cost(goal_node) + apple_cost;
-      // CNR_FATAL(logger_, "goal cost %f", goal_cost);
-      // CNR_FATAL(logger_, "Nodes of start tree: %u", start_tree_->getNumberOfNodes());
-      // CNR_FATAL(logger_, "Start node: " << start_tree_->getRoot()->getConfiguration().transpose());
-      // CNR_FATAL(logger_, "Goal node: " << goal_node->getConfiguration().transpose());
-      // CNR_FATAL(logger_, "Start node shappe: " << start_tree_->getRoot()->getConfiguration().rows() << "x" << start_tree_->getRoot()->getConfiguration().cols());
-      // CNR_FATAL(logger_, "Goal node shappe: " << goal_node->getConfiguration().rows() << "x" << goal_node->getConfiguration().cols());
       double utopia = goal_cost;
-      // CNR_FATAL(logger_, "QUI");
-      // CNR_FATAL(logger_, "Goal - Start: " << (goal_node->getConfiguration() - start_tree_->getRoot()->getConfiguration()).transpose());
-      // CNR_FATAL(logger_, "QUI" << metrics_->cost(start_tree_->getRoot(), goal_node));
-      // CNR_FATAL(logger_, "QUI");
-
       utopia += metrics_->utopia(start_tree_->getRoot(), goal_node);
+      unsigned int index = goal_nodes_.size();
 
       if ((utopia) > cost_)
       {
-        CNR_DEBUG(logger_, "the utopia cost of this goal is already worst than the actual solution, skip it");
+        CNR_WARN(logger_, "[MIRRT* Goal Registration] Goal %u skipped: utopia cost (%f) is worse than current best solution cost (%f).", index, utopia, cost_);
         return false;
       }
 
       if (!checker_->check(goal_node->getConfiguration()))
       {
-        CNR_DEBUG(logger_, "goal collides, skip it");
+        CNR_WARN(logger_, "[MIRRT* Goal Registration] Goal %u skipped: configuration is in collision.", index);
         return false;
       }
 
@@ -109,8 +100,6 @@ namespace graph
       TreePtr goal_tree;
       GoalStatus status;
       NodePtr new_node;
-
-      unsigned int index = goal_nodes_.size();
 
       // TODO IF REALISE O BENCHMARK
       if (start_tree_->connectToNode(goal_node, new_node, max_time))
@@ -126,12 +115,12 @@ namespace graph
 
         if (cost <= (utopia * utopia_tolerance_))
         {
-          CNR_DEBUG(logger_, "Goal %u reaches its utopia.", index);
+          CNR_WARN(logger_, "[MIRRT* Goal Registration] Goal %u: Direct connection reached utopia tolerance! Cost: %f (Path: %f, Goal: %f, Utopia: %f) -> Status: DONE", index, cost, path_cost, goal_cost, utopia);
           status = GoalStatus::done;
         }
         else
         {
-          CNR_WARN(logger_, "Goal %u has a solution with cost %f", index, cost);
+          CNR_WARN(logger_, "[MIRRT* Goal Registration] Goal %u: Direct connection found! Cost: %f (Path: %f, Goal: %f, Utopia: %f) -> Status: REFINE", index, cost, path_cost, goal_cost, utopia);
           status = GoalStatus::refine;
         }
 
@@ -144,6 +133,7 @@ namespace graph
         path_cost = cost = std::numeric_limits<double>::infinity();
         goal_tree = std::make_shared<Tree>(goal_node, max_distance_, checker_, metrics_, logger_, use_kdtree_);
         status = GoalStatus::search;
+        CNR_WARN(logger_, "[MIRRT* Goal Registration] Goal %u: No direct connection. Added to search tree -> Status: SEARCH (Exploring space, Goal cost: %f, Utopia: %f)", index, goal_cost, utopia);
       }
 
       // da cnr_class_loader
@@ -185,11 +175,15 @@ namespace graph
 
       if (costs_.at(index) >= (cost_ - 1e-8))
         return false;
+      double previous_best_cost = cost_;
       path_cost_ = path_costs_.at(index);
       goal_cost_ = goal_costs_.at(index);
       cost_ = costs_.at(index);
       best_goal_index = index;
       solution_ = solutions_.at(index);
+
+      CNR_WARN(logger_, "[MIRRT* Solution Update] >>> NEW GLOBAL BEST SOLUTION! Goal %d | Total Cost: %f (Path Cost: %f, Goal Cost: %f, Previous Best: %f, Utopia: %f)",
+               best_goal_index, cost_, path_cost_, goal_cost_, previous_best_cost, utopias_.at(index));
 
       for (unsigned int igoal = 0; igoal < goal_nodes_.size(); igoal++)
       {
@@ -199,7 +193,7 @@ namespace graph
         if (utopias_.at(igoal) > cost_)
         {
           status_.at(igoal) = GoalStatus::discard;
-          CNR_DEBUG(logger_, "Goal %u is discarded. utopia=%f, best cost=%f", igoal, utopias_.at(igoal), cost_);
+          CNR_WARN(logger_, "[MIRRT* Pruning] Goal %u DISCARDED: Utopia (%f) > Current best cost (%f)", igoal, utopias_.at(igoal), cost_);
           cleanTree();
           continue;
         }
@@ -247,11 +241,15 @@ namespace graph
       goal_cost_ = std::numeric_limits<double>::infinity();
       cost_ = std::numeric_limits<double>::infinity();
       cost_at_last_clean = std::numeric_limits<double>::infinity();
+      iter_ = 0;
     }
 
     bool MultigoalSolver::finalizeProblem()
     {
-      return initGoalSelector();
+      bool res = initGoalSelector();
+      CNR_WARN(logger_, "[MIRRT* Setup] Finalized problem with %zu candidate goals. Initial best cost: %f (Best Goal: %d, Utopia tolerance: %.2f)",
+               goal_nodes_.size(), cost_, best_goal_index, utopia_tolerance_);
+      return res;
     }
 
     bool MultigoalSolver::setProblem(const double &max_time)
@@ -327,10 +325,36 @@ namespace graph
       }
       if (cost_ <= utopia_tolerance_ * best_utopia_)
       {
-        CNR_DEBUG(logger_, "Find the final solution");
+        CNR_WARN(logger_, "[MIRRT* Convergence] Global best cost (%f) reached utopia threshold (%f * %f = %f). Solution cannot be improved further!",
+                 cost_, utopia_tolerance_, best_utopia_, utopia_tolerance_ * best_utopia_);
         solution = solution_;
         can_improve_ = false;
         return false;
+      }
+
+      iter_++;
+
+      if (iter_ == 1 || iter_ % 500 == 0)
+      {
+        unsigned int n_search = 0, n_refine = 0, n_done = 0, n_discard = 0;
+        for (const auto &st : status_)
+        {
+          if (st == GoalStatus::search)
+            n_search++;
+          else if (st == GoalStatus::refine)
+            n_refine++;
+          else if (st == GoalStatus::done)
+            n_done++;
+          else if (st == GoalStatus::discard)
+            n_discard++;
+        }
+        CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Status -> SEARCH (exploring): " << n_search
+                                          << ", REFINE (optimizing): " << n_refine
+                                          << ", DONE (optimal): " << n_done
+                                          << ", DISCARDED: " << n_discard
+                                          << " | Tree Nodes: " << (start_tree_ ? start_tree_->getNumberOfNodes() : 0)
+                                          << " | Best Cost: " << cost_ << " (Goal " << best_goal_index << ")"
+                                          << " | Local Bias: " << local_bias_);
       }
 
       //  CNR_INFO(logger_,"update probabilities");
@@ -476,7 +500,6 @@ namespace graph
             //        if (first_warp_)
             //        {
             //          solutions_.at(igoal)->warp();
-
             //          double cost_0=solutions_.at(igoal)->cost();
             //          solutions_.at(igoal)->simplify();
             //        }
@@ -488,12 +511,12 @@ namespace graph
             solved_ = true;
             if (costs_.at(igoal) <= (utopias_.at(igoal) * utopia_tolerance_))
             {
-              CNR_DEBUG(logger_, "Goal %u reaches its utopia. cost = %f, utopia =%f", igoal, path_costs_.at(igoal), utopias_.at(igoal));
+              CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (EXPLORING): First valid path found! Reached Utopia -> Cost: " << costs_.at(igoal) << " (Path: " << path_costs_.at(igoal) << ", Apple: " << goal_costs_.at(igoal) << ", Utopia: " << utopias_.at(igoal) << ") -> Status: DONE");
               status_.at(igoal) = GoalStatus::done;
             }
             else
             {
-              CNR_DEBUG(logger_, "Goal %u has a solution with cost %f", igoal, path_costs_.at(igoal));
+              CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (EXPLORING): First valid path found! Cost: " << costs_.at(igoal) << " (Path: " << path_costs_.at(igoal) << ", Apple: " << goal_costs_.at(igoal) << ", Utopia: " << utopias_.at(igoal) << ") -> Status: REFINE (Now optimizing)");
               status_.at(igoal) = GoalStatus::refine;
             }
             global_improvement = isBestSolution(igoal) || global_improvement;
@@ -529,16 +552,19 @@ namespace graph
 
             tube_samplers_.at(igoal)->setPath(solutions_.at(igoal));
             tube_samplers_.at(igoal)->setRadius(tube_radius_ * solutions_.at(igoal)->cost());
+            double old_goal_cost = costs_.at(igoal);
             path_costs_.at(igoal) = solutions_.at(igoal)->cost();
             costs_.at(igoal) = path_costs_.at(igoal) + goal_costs_.at(igoal);
             if (costs_.at(igoal) <= (utopias_.at(igoal) * utopia_tolerance_))
             {
-              CNR_DEBUG(logger_, "Goal %u reaches its utopia. cost = %f, utopia =%f", igoal, costs_.at(igoal), utopias_.at(igoal));
+              CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Rewiring improved cost: " << old_goal_cost << " -> " << costs_.at(igoal) << " (Path: " << path_costs_.at(igoal) << ", Utopia: " << utopias_.at(igoal) << ") -> Status: DONE (Utopia reached)");
               cleanTree();
               status_.at(igoal) = GoalStatus::done;
             }
             else
-              CNR_DEBUG(logger_, "Goal %u refines solution with cost %f", igoal, costs_.at(igoal));
+            {
+              CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Rewiring improved cost: " << old_goal_cost << " -> " << costs_.at(igoal) << " (Path: " << path_costs_.at(igoal) << ", Apple: " << goal_costs_.at(igoal) << ", Utopia: " << utopias_.at(igoal) << ")");
+            }
             global_improvement = isBestSolution(igoal) || global_improvement;
           }
           else if (new_start_node) // is an improvement?????
@@ -569,16 +595,19 @@ namespace graph
 
                 tube_samplers_.at(igoal)->setPath(solutions_.at(igoal));
                 tube_samplers_.at(igoal)->setRadius(tube_radius_ * solutions_.at(igoal)->cost());
+                double old_goal_cost = costs_.at(igoal);
                 path_costs_.at(igoal) = solutions_.at(igoal)->cost();
                 costs_.at(igoal) = path_costs_.at(igoal) + goal_costs_.at(igoal);
                 if (costs_.at(igoal) <= (utopias_.at(igoal) * utopia_tolerance_))
                 {
-                  CNR_DEBUG(logger_, "Goal %u reaches its utopia. cost = %f, utopia =%f", igoal, costs_.at(igoal), utopias_.at(igoal));
+                  CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Direct connect improved cost: " << old_goal_cost << " -> " << costs_.at(igoal) << " (Path: " << path_costs_.at(igoal) << ", Utopia: " << utopias_.at(igoal) << ") -> Status: DONE (Utopia reached)");
                   cleanTree();
                   status_.at(igoal) = GoalStatus::done;
                 }
                 else
-                  CNR_DEBUG(logger_, "Goal %u refines solution with cost %f", igoal, costs_.at(igoal));
+                {
+                  CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Direct connect improved cost: " << old_goal_cost << " -> " << costs_.at(igoal) << " (Path: " << path_costs_.at(igoal) << ", Apple: " << goal_costs_.at(igoal) << ", Utopia: " << utopias_.at(igoal) << ")");
+                }
                 global_improvement = isBestSolution(igoal) || global_improvement;
               }
             }
@@ -598,6 +627,13 @@ namespace graph
           sampler->setLocalBias(local_bias_);
         }
       }
+
+      if (global_improvement)
+      {
+        CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] >>> CURRENT SOLUTION IMPROVED: " << old_cost << " -> " << cost_
+                                          << " (Best Goal: " << best_goal_index << ", Path Cost: " << path_cost_ << ", Goal Cost: " << goal_cost_ << ")");
+      }
+
       solution = solution_;
       return global_improvement;
     }
@@ -639,6 +675,7 @@ namespace graph
 
     void MultigoalSolver::cleanTree()
     {
+      CNR_WARN(logger_, "[MIRRT* Pruning] Cleaning start tree outside informed ellipsoids (Nodes before purge: " << (start_tree_ ? start_tree_->getNumberOfNodes() : 0) << ")...");
       std::vector<NodePtr> white_list = goal_nodes_;
       white_list.push_back(start_tree_->getRoot());
       std::vector<SamplerPtr> samplers;
@@ -655,6 +692,7 @@ namespace graph
             white_list.push_back(conn->getChild());
       }
       start_tree_->purgeNodesOutsideEllipsoids(samplers, white_list);
+      CNR_WARN(logger_, "[MIRRT* Pruning] Cleaning complete. Start tree remaining nodes: " << (start_tree_ ? start_tree_->getNumberOfNodes() : 0));
     }
 
     std::vector<TreePtr> MultigoalSolver::getGoalTrees()
