@@ -73,6 +73,7 @@ namespace graph
       double cost_at_last_clean = std::numeric_limits<double>::infinity();
       unsigned int iter_ = 0;
       int best_goal_index = -1;
+      int best_utopia_goal_index_ = -1;
       double r_rewire_ = 1.;
       double local_bias_ = 0.3;
       double reward_ = 1.0;
