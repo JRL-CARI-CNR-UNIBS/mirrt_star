@@ -125,6 +125,14 @@ namespace graph
       {
         return goal_nodes_;
       }
+      double getBestUtopia() const
+      {
+        return best_utopia_;
+      }
+      double getUtopiaTolerance() const
+      {
+        return utopia_tolerance_;
+      }
       void cleanTree();
     };
 
