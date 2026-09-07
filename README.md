@@ -10,9 +10,13 @@ The solver is exposed as a `graph::core::TreeSolverPlugin`, loadable at runtime 
 ## How It Works
 
 - **Multiple Goals, One Start Tree**: `MultigoalSolver` (`include/mirrt_star/solvers/mirrt_star.h`) extends `graph::core::TreeSolver`. Each goal added via `addGoal()` gets its own status (`search`, `refine`, `done`, `discard`), a dedicated informed/tube sampler, and, optionally, its own exploration tree for bidirectional search.
-- **Goal Selection**: At every iteration, `GoalSelectionManager` (`include/mirrt_star/multi_goal_selection`) assigns each active goal a sampling probability using a policy/reward pair (e.g., an $\varepsilon$-greedy multi-armed bandit driven by relative path-cost improvement), steering exploration toward goals that converge fastest.
+- **Goal Selection**: At every iteration, `GoalSelectionManager` (`include/mirrt_star/multi_goal_selection`) assigns each active goal a sampling probability using a policy/reward pair (e.g., an ε-greedy multi-armed bandit driven by relative path-cost improvement), steering exploration toward goals that converge fastest.
 - **Goal Weighting (`apple_weight`)**: In harvesting and targeted manipulation tasks, candidate goals may carry intrinsic costs or values (e.g. proximity to foliage, reachability, fruit quality). The solver combines motion distance with goal cost:
-  $$\text{cost}(g) = \text{path\_cost}(g) + \text{goal\_cost}(g) \times \text{apple\_weight}$$
+
+$$
+\text{cost}(g) = \text{path\_cost}(g) + \text{goal\_cost}(g) \times \text{apple\_weight}
+$$
+
 - **Direct Candidate Shortcut Checks**: When expanding the start tree towards a sample, the planner checks direct collision-free line connections to candidate goals. If a valid connection is discovered whose total cost improves the incumbent solution, the path is instantly registered without waiting for bidirectional trees to meet.
 - **Pruning**: As soon as a goal's utopia cost exceeds the current best solution cost, that goal is marked `discard` and its samples/tree nodes are pruned (`cleanTree()` / `purgeNodesOutsideEllipsoids`), keeping memory usage bounded and the search focused.
 - **Tube-Informed Sampling**: Once a solution is found for a goal, its search transitions to `refine` status using a `TubeInformedSampler`. Sampling is restricted to an ellipsoid and a local tube surrounding the incumbent trajectory, dynamically balancing global exploration and local refinement via an adaptive `local_bias`.
@@ -99,16 +103,16 @@ Parameters are configured via YAML under the solver namespace:
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `apple_weight` | `double` | `10.0` | Multiplier for the intrinsic goal cost: $\text{total} = \text{path} + \text{goal\_cost} \times \text{apple\_weight}$. |
+| `apple_weight` | `double` | `10.0` | Multiplier for the intrinsic goal cost: `total = path_cost + goal_cost * apple_weight`. |
 | `rewire_radius` | `double` | `2 * max_distance` | Radius used to rewire the start tree while refining a solution. |
 | `mixed_strategy` | `bool` | `true` | If `true`, samples from tube-informed sampler (ellipsoid + local tube); if `false`, uses standard informed sampler. |
 | `bidirectional` | `bool` | `true` | If `true`, grows trees from both start and unsolved goals to connect them. |
-| `k_nearest` | `bool` | `false` | If `true`, rewiring queries the $K$ nearest neighbors instead of a fixed Euclidean ball. |
+| `k_nearest` | `bool` | `false` | If `true`, rewiring queries the K nearest neighbors instead of a fixed Euclidean ball. |
 | `local_bias` | `double` | `0.3` | Initial probability of sampling within the local tube surrounding the incumbent solution. |
 | `tube_radius` | `double` | `0.01` | Normalized radius factor for the local tube around the incumbent solution. |
 | `forgetting_factor`| `double` | `0.999` | Exponential decay factor applied to `local_bias` after each iteration. |
 | `reward` | `double` | `1.0` | Multiplier scaling the local bias reward upon cost reduction. |
-| `utopia_tolerance` | `double` | `1.0` | Termination threshold factor: when $\text{cost} \le \text{utopia} \times \text{utopia\_tolerance}$, goal is marked `done`. |
+| `utopia_tolerance` | `double` | `1.0` | Termination threshold factor: when `cost <= utopia * utopia_tolerance`, goal is marked `done`. |
 | `policy_type` | `string` | `"MultiArmedBandit"`| Goal-selection manager policy family. |
 | `policy_name` | `string` | `"eGreedy"` | Bandit exploration policy (`eGreedy`). |
 | `reward_fcn` | `string` | `"RelativeImprovement"`| Reward feedback metric for goal sampling. |
@@ -130,7 +134,7 @@ The `apple_project` branch incorporates major architectural additions, algorithm
 | `src/.../mirrt_star.cpp` | Weighted Goal Cost Optimization | Integrated `apple_weight_` into goal evaluation and selection criteria. |
 | `src/.../mirrt_star.cpp` | Fast Direct Goal Shortcut Connection | Start tree expansion tests direct collision-free shortcuts to candidate goals, drastically cutting time-to-first-solution. |
 | `src/.../mirrt_star.cpp` | **Eliminated Solution Freeze during Tree Purging** | Fixed quadratic/recursive tree purging stalls: replaced repeated `cleanTree()` calls inside goal loops with cost hysteresis and size guards. |
-| `src/.../mirrt_star.cpp` | **$O(1)$ Goal Tree Connection Reset** | Replaced expensive recursive `goal_trees_.at(igoal)->cleanTree()` upon bidirectional connection with instantaneous $O(1)$ shared pointer reassignment. |
+| `src/.../mirrt_star.cpp` | **O(1) Goal Tree Connection Reset** | Replaced expensive recursive `goal_trees_.at(igoal)->cleanTree()` upon bidirectional connection with instantaneous O(1) shared pointer reassignment. |
 | `src/.../mirrt_star.cpp` | Dynamic Local Bias Adaptation | Implemented adaptive tube sampling bias update proportional to relative cost progress. |
 
 ### In-Depth Details of Key Modifications
@@ -178,16 +182,20 @@ The `apple_project` branch incorporates major architectural additions, algorithm
     }
     ```
   - **Tree Size Guard**: In `cleanTree()`, pruning is skipped if the tree has fewer than 500 nodes (`start_tree_->getNumberOfNodes() < 500`), avoiding useless overhead early in planning.
-  - **$O(1)$ Goal Tree Reset**: Replaced recursive node-by-node deletion on connected goal trees with instant tree object recreation:
+  - **O(1) Goal Tree Reset**: Replaced recursive node-by-node deletion on connected goal trees with instant tree object recreation:
     ```cpp
     goal_trees_.at(igoal) = std::make_shared<Tree>(goal_nodes_.at(igoal), max_distance_, checker_, metrics_, logger_, use_kdtree_);
     ```
   These modifications completely eliminate the solver stalls upon discovering improved paths.
 
 #### 5. Adaptive Local Tube Bias (`mirrt_star.cpp`)
-- In `MultigoalSolver::update()`, whenever an improvement occurs, the sampler's local bias is updated:
-  $$\text{local\_bias} = \min\left(\gamma \cdot \text{local\_bias} + R \cdot \frac{\text{cost}_{\text{old}} - \text{cost}}{\text{cost}_{\text{old}} - \text{utopia}_{\text{best}}}, 1.0\right)$$
-  This concentrates sampling near the solution trajectory while progress is rapid, and gradually widens search to the global informed ellipsoid when local refinements plateau.
+In `MultigoalSolver::update()`, whenever an improvement occurs, the sampler's local bias is updated:
+
+$$
+\text{local\_bias} = \min\left( \gamma \cdot \text{local\_bias} + R \cdot \frac{\text{cost}_{\text{old}} - \text{cost}}{\text{cost}_{\text{old}} - \text{utopia}_{\text{best}}}, 1.0 \right)
+$$
+
+This concentrates sampling near the solution trajectory while progress is rapid, and gradually widens search to the global informed ellipsoid when local refinements plateau.
 
 ---
 
