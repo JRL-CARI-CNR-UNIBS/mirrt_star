@@ -188,6 +188,7 @@ namespace graph
       CNR_WARN(logger_, "[MIRRT* Solution Update] >>> NEW GLOBAL BEST SOLUTION! Goal %d | Total Cost: %f (Path Cost: %f, Goal Cost: %f, Previous Best: %f, Utopia: %f)",
                best_goal_index, cost_, path_cost_, goal_cost_, previous_best_cost, utopias_.at(index));
 
+      bool any_discarded = false;
       for (unsigned int igoal = 0; igoal < goal_nodes_.size(); igoal++)
       {
 
@@ -197,7 +198,7 @@ namespace graph
         {
           status_.at(igoal) = GoalStatus::discard;
           // CNR_WARN(logger_, "[MIRRT* Pruning] Goal %u DISCARDED: Utopia (%f) > Current best cost (%f)", igoal, utopias_.at(igoal), cost_);
-          cleanTree();
+          any_discarded = true;
           continue;
         }
         if (status_.at(igoal) == GoalStatus::done)
@@ -213,7 +214,8 @@ namespace graph
         }
       }
 
-      if ((cost_ < 0.9999 * cost_at_last_clean) || start_tree_->needCleaning())
+      // Clean tree at most once if goals were discarded or significant cost improvement occurred (>=10%)
+      if (any_discarded || (cost_ < 0.90 * cost_at_last_clean) || start_tree_->needCleaning())
       {
         cost_at_last_clean = cost_;
         cleanTree();
@@ -423,7 +425,7 @@ namespace graph
               if (new_start_node == goal_nodes_.at(igoal))
               {
                 improved = true;
-                goal_trees_.at(igoal)->cleanTree();
+                goal_trees_.at(igoal) = std::make_shared<Tree>(goal_nodes_.at(igoal), max_distance_, checker_, metrics_, logger_, use_kdtree_);
               }
             }
             else // not is_goal_bias, add a new random node
@@ -441,7 +443,7 @@ namespace graph
                   if (new_start_node == goal_nodes_.at(igoal)) // a solution is found
                   {
                     improved = true;
-                    goal_trees_.at(igoal)->cleanTree();
+                    goal_trees_.at(igoal) = std::make_shared<Tree>(goal_nodes_.at(igoal), max_distance_, checker_, metrics_, logger_, use_kdtree_);
                   }
                 }
               }
@@ -459,7 +461,7 @@ namespace graph
               if (new_start_node == goal_nodes_.at(igoal))
               {
                 improved = true;
-                goal_trees_.at(igoal)->cleanTree();
+                goal_trees_.at(igoal) = std::make_shared<Tree>(goal_nodes_.at(igoal), max_distance_, checker_, metrics_, logger_, use_kdtree_);
               }
             }
             else // not is_goal_bias, add a new random node
@@ -675,10 +677,13 @@ namespace graph
 
     void MultigoalSolver::cleanTree()
     {
-      // CNR_WARN(logger_, "[MIRRT* Pruning] Cleaning start tree outside informed ellipsoids (Nodes before purge: " << (start_tree_ ? start_tree_->getNumberOfNodes() : 0) << ")...");
+      if (!start_tree_ || start_tree_->getNumberOfNodes() < 500)
+        return;
+
       std::vector<NodePtr> white_list = goal_nodes_;
       white_list.push_back(start_tree_->getRoot());
       std::vector<SamplerPtr> samplers;
+      samplers.reserve(goal_nodes_.size());
       for (unsigned int igoal = 0; igoal < goal_nodes_.size(); igoal++)
       {
         if ((status_.at(igoal) == GoalStatus::refine) || (status_.at(igoal) == GoalStatus::search))
@@ -692,7 +697,6 @@ namespace graph
             white_list.push_back(conn->getChild());
       }
       start_tree_->purgeNodesOutsideEllipsoids(samplers, white_list);
-      // CNR_WARN(logger_, "[MIRRT* Pruning] Cleaning complete. Start tree remaining nodes: " << (start_tree_ ? start_tree_->getNumberOfNodes() : 0));
     }
 
     std::vector<TreePtr> MultigoalSolver::getGoalTrees()
