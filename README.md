@@ -14,7 +14,7 @@ The solver is exposed as a `graph::core::TreeSolverPlugin`, loadable at runtime 
 - **Goal Weighting (`apple_weight`)**: In harvesting and targeted manipulation tasks, candidate goals may carry intrinsic costs or values (e.g. proximity to foliage, reachability, fruit quality). The solver combines motion distance with goal cost:
 
 $$
-\text{cost}(g) = \text{path\_cost}(g) + \text{goal\_cost}(g) \times \text{apple\_weight}
+\text{cost}(g) = \text{cost}_{\text{path}}(g) + \text{cost}_{\text{goal}}(g) \times \text{weight}_{\text{apple}}
 $$
 
 - **Direct Candidate Shortcut Checks**: When expanding the start tree towards a sample, the planner checks direct collision-free line connections to candidate goals. If a valid connection is discovered whose total cost improves the incumbent solution, the path is instantly registered without waiting for bidirectional trees to meet.
@@ -192,7 +192,7 @@ The `apple_project` branch incorporates major architectural additions, algorithm
 In `MultigoalSolver::update()`, whenever an improvement occurs, the sampler's local bias is updated:
 
 $$
-\text{local\_bias} = \min\left( \gamma \cdot \text{local\_bias} + R \cdot \frac{\text{cost}_{\text{old}} - \text{cost}}{\text{cost}_{\text{old}} - \text{utopia}_{\text{best}}}, 1.0 \right)
+\text{bias}_{\text{local}} = \min\left( \gamma \cdot \text{bias}_{\text{local}} + R \cdot \frac{\text{cost}_{\text{old}} - \text{cost}}{\text{cost}_{\text{old}} - \text{utopia}_{\text{best}}}, 1.0 \right)
 $$
 
 This concentrates sampling near the solution trajectory while progress is rapid, and gradually widens search to the global informed ellipsoid when local refinements plateau.
