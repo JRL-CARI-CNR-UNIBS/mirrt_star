@@ -572,44 +572,78 @@ namespace graph
 
           if (!goal_improved_by_rewire && new_start_node)
           {
-            // try connect with the goal
-            double cost_to_goal = metrics_->cost(new_start_node, goal_nodes_.at(igoal));
-            if (cost_to_goal < max_distance_ && (start_tree_->costToNode(new_start_node) + cost_to_goal) < path_costs_.at(igoal))
+            // Verify goal_node is not an ancestor of new_start_node to prevent creating a directed cycle in the tree
+            bool is_ancestor = false;
+            NodePtr ancestor = new_start_node;
+            while (ancestor && ancestor != start_tree_->getRoot())
             {
-              CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Candidate shortcut found! Dist: " << cost_to_goal
-                                                << " | Potential Cost: " << (start_tree_->costToNode(new_start_node) + cost_to_goal + goal_costs_.at(igoal))
-                                                << " vs Current: " << costs_.at(igoal) << " | Checking collision...");
-
-              if (checker_->checkConnection(new_start_node->getConfiguration(),
-                                            goal_nodes_.at(igoal)->getConfiguration()))
+              if (ancestor == goal_nodes_.at(igoal))
               {
-                goal_nodes_.at(igoal)->parentConnection(0)->remove();
-                ConnectionPtr conn = std::make_shared<Connection>(new_start_node, goal_nodes_.at(igoal), logger_);
-                conn->setCost(cost_to_goal);
-                conn->add();
-                solutions_.at(igoal) = std::make_shared<Path>(start_tree_->getConnectionToNode(goal_nodes_.at(igoal)), metrics_, checker_, logger_);
-                solutions_.at(igoal)->setTree(start_tree_);
+                is_ancestor = true;
+                break;
+              }
+              if (ancestor->getParentConnectionsSize() == 0)
+                break;
+              ancestor = ancestor->parentConnection(0)->getParent();
+            }
 
-                tube_samplers_.at(igoal)->setPath(solutions_.at(igoal));
-                tube_samplers_.at(igoal)->setRadius(tube_radius_ * solutions_.at(igoal)->cost());
-                double old_goal_cost = costs_.at(igoal);
-                path_costs_.at(igoal) = solutions_.at(igoal)->cost();
-                costs_.at(igoal) = path_costs_.at(igoal) + goal_costs_.at(igoal);
-                if (costs_.at(igoal) <= (utopias_.at(igoal) * utopia_tolerance_))
+            if (!is_ancestor)
+            {
+              // try connect with the goal
+              double cost_to_goal = metrics_->cost(new_start_node, goal_nodes_.at(igoal));
+              if (cost_to_goal < max_distance_ && (start_tree_->costToNode(new_start_node) + cost_to_goal) < path_costs_.at(igoal))
+              {
+                CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Candidate shortcut found! Dist: " << cost_to_goal
+                                                  << " | Potential Cost: " << (start_tree_->costToNode(new_start_node) + cost_to_goal + goal_costs_.at(igoal))
+                                                  << " vs Current: " << costs_.at(igoal) << " | Checking collision...");
+
+                if (checker_->checkConnection(new_start_node->getConfiguration(),
+                                              goal_nodes_.at(igoal)->getConfiguration()))
                 {
-                  CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Direct connect improved cost: " << old_goal_cost << " -> " << costs_.at(igoal) << " (Path: " << path_costs_.at(igoal) << ", Utopia: " << utopias_.at(igoal) << ") -> Status: DONE (Utopia reached)");
-                  cleanTree();
-                  status_.at(igoal) = GoalStatus::done;
+                  ConnectionPtr old_parent_conn = (goal_nodes_.at(igoal)->getParentConnectionsSize() > 0) ?
+                                                  goal_nodes_.at(igoal)->parentConnection(0) : nullptr;
+                  ConnectionPtr conn = std::make_shared<Connection>(new_start_node, goal_nodes_.at(igoal), logger_);
+                  conn->setCost(cost_to_goal);
+
+                  try
+                  {
+                    if (old_parent_conn)
+                      old_parent_conn->remove();
+                    conn->add();
+
+                    PathPtr candidate_solution = std::make_shared<Path>(start_tree_->getConnectionToNode(goal_nodes_.at(igoal)), metrics_, checker_, logger_);
+                    candidate_solution->setTree(start_tree_);
+
+                    solutions_.at(igoal) = candidate_solution;
+                    tube_samplers_.at(igoal)->setPath(solutions_.at(igoal));
+                    tube_samplers_.at(igoal)->setRadius(tube_radius_ * solutions_.at(igoal)->cost());
+                    double old_goal_cost = costs_.at(igoal);
+                    path_costs_.at(igoal) = solutions_.at(igoal)->cost();
+                    costs_.at(igoal) = path_costs_.at(igoal) + goal_costs_.at(igoal);
+                    if (costs_.at(igoal) <= (utopias_.at(igoal) * utopia_tolerance_))
+                    {
+                      CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Direct connect improved cost: " << old_goal_cost << " -> " << costs_.at(igoal) << " (Path: " << path_costs_.at(igoal) << ", Utopia: " << utopias_.at(igoal) << ") -> Status: DONE (Utopia reached)");
+                      cleanTree();
+                      status_.at(igoal) = GoalStatus::done;
+                    }
+                    else
+                    {
+                      CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Direct connect improved cost: " << old_goal_cost << " -> " << costs_.at(igoal) << " (Path: " << path_costs_.at(igoal) << ", Apple: " << goal_costs_.at(igoal) << ", Utopia: " << utopias_.at(igoal) << ")");
+                    }
+                    global_improvement = isBestSolution(igoal) || global_improvement;
+                  }
+                  catch (const std::exception &e)
+                  {
+                    CNR_ERROR(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Exception applying shortcut: " << e.what() << " - rolling back connection.");
+                    conn->remove();
+                    if (old_parent_conn)
+                      old_parent_conn->add();
+                  }
                 }
                 else
                 {
-                  CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Direct connect improved cost: " << old_goal_cost << " -> " << costs_.at(igoal) << " (Path: " << path_costs_.at(igoal) << ", Apple: " << goal_costs_.at(igoal) << ", Utopia: " << utopias_.at(igoal) << ")");
+                  CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Candidate shortcut was in collision.");
                 }
-                global_improvement = isBestSolution(igoal) || global_improvement;
-              }
-              else
-              {
-                CNR_WARN(logger_, "[MIRRT* Iter " << iter_ << "] Goal " << igoal << " (REFINING): Candidate shortcut was in collision.");
               }
             }
           }
