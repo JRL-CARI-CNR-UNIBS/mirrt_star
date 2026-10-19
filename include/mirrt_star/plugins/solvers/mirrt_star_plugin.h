@@ -1,3 +1,7 @@
+/**
+ * @file mirrt_star_plugin.h
+ * @brief cnr_class_loader plugin that creates a graph::mirrt_star::MultigoalSolver.
+ */
 #pragma once
 /*
 Copyright (c) 2024, Manuel Beschi and Cesare Tonola, JRL-CARI CNR-STIIMA/UNIBS, manuel.beschi@unibs.it, c.tonola001@unibs.it

@@ -1,3 +1,8 @@
+/**
+ * @file policy_custom_example.h
+ * @brief Example of a custom (non-bandit) goal selection policy.
+ * @warning Its constructor does not match PolicyBase (missing logger): it does not compile and is not used.
+ */
 #pragma once
 /*
 Copyright (c) 2021, Marco Faroni CNR-STIIMA marco.faroni@stiima.cnr.it
@@ -31,6 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Example policy that always expands the last goal.
+ */
 class PolicyCustomExample : public PolicyBase
 {
 public:
@@ -55,6 +63,9 @@ public:
   }
 
 };
+/**
+ * @brief Shared pointer to a PolicyCustomExample.
+ */
 typedef std::shared_ptr<PolicyCustomExample> PolicyCustomExamplePtr;
 
 }

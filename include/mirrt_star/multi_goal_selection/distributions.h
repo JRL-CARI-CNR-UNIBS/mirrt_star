@@ -1,3 +1,7 @@
+/**
+ * @file distributions.h
+ * @brief Beta distribution compatible with the C++ \<random\> interface.
+ */
 #pragma once
 
 #include <mirrt_star/multi_goal_selection/goal_selection_util.h>
@@ -9,11 +13,21 @@ namespace multi_goal_selection
 {
 
   template <typename RealType = double>
+  /**
+   * @brief Beta(a, b) distribution, sampled as X/(X+Y) with X~Gamma(a), Y~Gamma(b).
+   *
+   * Follows the interface of the standard distributions in \<random\>.
+   * Used by the Thompson sampling policy (PolicyMABTS).
+   * @tparam RealType Floating point type.
+   */
   class beta_distribution
   {
     public:
       typedef RealType result_type;
 
+      /**
+       * @brief Parameter set (a, b) of the distribution.
+       */
       class param_type
       {
         public:
@@ -40,6 +54,11 @@ namespace multi_goal_selection
           RealType a_param, b_param;
       };
 
+      /**
+       * @brief Constructor.
+       * @param a First shape parameter (> 0).
+       * @param b Second shape parameter (> 0).
+       */
       explicit beta_distribution(RealType a = 2.0, RealType b = 2.0)
         : a_gamma(a), b_gamma(b) { }
       explicit beta_distribution(const param_type& param)
@@ -59,6 +78,10 @@ namespace multi_goal_selection
       }
 
       template <typename URNG>
+      /**
+       * @brief Draw a sample in [0, 1].
+       * @param engine Random number engine.
+       */
       result_type operator()(URNG& engine)
       {
         return generate(engine, a_gamma, b_gamma);
@@ -106,6 +129,9 @@ namespace multi_goal_selection
   };
 
   template <typename CharT, typename RealType>
+  /**
+   * @brief Write the distribution as "~Beta(a,b)".
+   */
   std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os,
     const beta_distribution<RealType>& beta)
   {
@@ -114,6 +140,9 @@ namespace multi_goal_selection
   }
 
   template <typename CharT, typename RealType>
+  /**
+   * @brief Read a distribution written as "~Beta(a,b)".
+   */
   std::basic_istream<CharT>& operator>>(std::basic_istream<CharT>& is,
     beta_distribution<RealType>& beta)
   {

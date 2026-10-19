@@ -1,3 +1,7 @@
+/**
+ * @file reward_best_cost.h
+ * @brief Best-cost reward.
+ */
 #pragma once
 /*
 Copyright (c) 2021, Marco Faroni CNR-STIIMA marco.faroni@stiima.cnr.it
@@ -31,13 +35,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Reward is minus the current best cost. Used by PolicyUniformOnVolume.
+ */
 class RewardBestCost: public RewardBase
 {
 public:
+  /**
+   * @brief Constructor.
+   * @param logger Logger.
+   */
   RewardBestCost(const cnr_logger::TraceLoggerPtr &logger):
     RewardBase(logger)
   {};
 
+  /**
+   * @copydoc RewardBase::getReward
+   */
   double getReward(const std::vector<double>& costs, const std::vector<double>& utopias, const double& best_cost)
   {
     last_best_cost_ = best_cost;
@@ -45,6 +59,9 @@ public:
   };
 
 };
+/**
+ * @brief Shared pointer to a RewardBestCost.
+ */
 typedef std::shared_ptr<RewardBestCost> RewardBestCostPtr;
 
 

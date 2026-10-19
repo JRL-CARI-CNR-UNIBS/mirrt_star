@@ -1,3 +1,7 @@
+/**
+ * @file policy_mab.h
+ * @brief Base class of the multi-armed bandit (MAB) goal selection policies.
+ */
 #pragma once
 /*
 Copyright (c) 2021, Marco Faroni CNR-STIIMA marco.faroni@stiima.cnr.it
@@ -33,9 +37,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Base class of the multi-armed bandit policies.
+ *
+ * Each goal is an arm. At every iteration exactly one arm, chosen by
+ * selectNextArm(), gets probability 1 and the others get 0.
+ */
 class PolicyMAB: public PolicyBase
 {
 public:
+  /**
+   * @brief Constructor.
+   * @param name Parameter namespace of the policy.
+   * @param n_goals Number of goals (arms).
+   * @param logger Logger.
+   */
   PolicyMAB(const std::string& name, const int& n_goals,
             const cnr_logger::TraceLoggerPtr &logger) :
     PolicyBase(name, n_goals,logger)
@@ -46,6 +62,9 @@ public:
     std::fill(expected_reward_.begin(), expected_reward_.end(), 0.0);
   }
 
+  /**
+   * @brief Select one arm and return a one-hot probability vector.
+   */
   std::vector<double> getProbabilities()
   {
     std::fill(goals_probabilities_.begin(), goals_probabilities_.end(), 0.0);
@@ -54,8 +73,17 @@ public:
     return goals_probabilities_;
   }
 
+  /**
+   * @brief Choose the arm to pull at the next iteration.
+   */
   virtual int selectNextArm() = 0;
 
+  /**
+   * @brief Reset the expected rewards to given values.
+   * @param rewards Initial reward of each arm (size n_goals).
+   * @param std_devs Standard deviation of each arm (unused here).
+   * @return False if the vector size is wrong.
+   */
   virtual bool reinitRewards(std::vector<double> rewards, std::vector<double> std_devs)
   {
     if (rewards.size() != (std::size_t)n_goals_)
@@ -71,19 +99,34 @@ public:
     return true;
   }
 
+  /**
+   * @brief Update with a reward and its variance. The base version ignores the variance.
+   * @param i_goal Arm index.
+   * @param reward Reward.
+   * @param variance Reward variance.
+   */
   virtual void updateState(const int& i_goal, const double& reward, const double& variance)
   {
     updateState(i_goal, reward);
   }
 
+  /**
+   * @brief Default update: increment the pull counter and accumulate the reward.
+   */
   virtual void updateState(const int& i_goal, const double& reward)
   {
     pull_counter_[i_goal]+=1;
     expected_reward_[i_goal]+=reward;
   }
 
+  /**
+   * @brief Short description of the policy.
+   */
   virtual std::string toString() = 0;
 
+  /**
+   * @brief Print rewards and pull counters on stdout.
+   */
   virtual void print()
   {
     std::cout << toString().c_str() << "\n";
@@ -102,8 +145,14 @@ public:
     std::cout << "\n";
   }
 
+  /**
+   * @brief Expected reward of each arm.
+   */
   std::vector<double> getExpectedRewards(){return expected_reward_;}
 
+  /**
+   * @brief Reward variance of each arm (not implemented in the base class).
+   */
   virtual std::vector<double> getVariance()
   {
     std::cout << "NOT IMPLEMENTED" << std::endl;
@@ -111,15 +160,21 @@ public:
   }
 
 
+  /**
+   * @brief Number of pulls of each arm.
+   */
   std::vector<int> getPullCounters(){return pull_counter_;}
 
 protected:
-  std::vector<int> pull_counter_;
-  std::vector<double> expected_reward_;
-  std::vector<double> initial_reward_;
+  std::vector<int> pull_counter_;  ///< Number of pulls of each arm.
+  std::vector<double> expected_reward_;  ///< Expected (or accumulated) reward of each arm.
+  std::vector<double> initial_reward_;  ///< Rewards set by reinitRewards().
 
 
 };
+/**
+ * @brief Shared pointer to a PolicyMAB.
+ */
 typedef std::shared_ptr<PolicyMAB> PolicyMABPtr;
 
 }

@@ -1,3 +1,9 @@
+/**
+ * @file policy_mab_kfmanb.h
+ * @brief Kalman filter multi-armed bandit (KF-MANB) policy.
+ * @warning Not yet ported from ROS1 (uses ros::NodeHandle and ROS1 messages): it does not compile
+ * and is not used by GoalSelectionManager.
+ */
 #pragma once
 
 #include <graph_core/multi_goal_selection/policies/policy_mab.h>
@@ -7,6 +13,15 @@
 namespace multi_goal_selection
 {
 
+/**
+ * @brief KF-MANB policy (McConachie and Berenson, T-ASE 2018).
+ *
+ * Each arm reward is tracked by a scalar Kalman filter; the next arm is the one with the
+ * highest reward sampled from the estimated Gaussian distributions.
+ *
+ * Parameters: @c sigma_obs (0.01), @c sigma_tr (0.1), @c sigma_arms (0.2),
+ * @c sigma_obs_dyn (false), @c sigma_gain (1.0).
+ */
 class PolicyMABKFMANB : public PolicyMAB
 {
 
@@ -190,6 +205,9 @@ public:
   }
 
 };
+/**
+ * @brief Shared pointer to a PolicyMABKFMANB.
+ */
 typedef std::shared_ptr<PolicyMABKFMANB> PolicyMABKFMANBPtr;
 
 } //namespace

@@ -1,3 +1,9 @@
+/**
+ * @file policy_mab_ts.h
+ * @brief Thompson sampling multi-armed bandit policy.
+ * @warning Not yet ported from ROS1 (uses ros::NodeHandle): it does not compile and is not used
+ * by GoalSelectionManager.
+ */
 #pragma once
 
 #include <mirrt_star/multi_goal_selection/policies/policy_mab.h>
@@ -6,6 +12,11 @@
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Thompson sampling with Beta priors and Bernoulli rewards (reward > 0.5 counts as a success).
+ *
+ * Parameters: @c ts_alpha and @c ts_beta (double, default 1.0), the prior of each arm.
+ */
 class PolicyMABTS : public PolicyMAB
 {
 
@@ -61,6 +72,9 @@ public:
   }
 
 };
+/**
+ * @brief Shared pointer to a PolicyMABTS.
+ */
 typedef std::shared_ptr<PolicyMABTS> PolicyMABTSPtr;
 
 } //namespace

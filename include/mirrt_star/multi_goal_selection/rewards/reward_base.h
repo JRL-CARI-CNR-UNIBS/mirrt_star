@@ -1,3 +1,7 @@
+/**
+ * @file reward_base.h
+ * @brief Base class of the rewards used to update the goal selection policies.
+ */
 #pragma once
 /*
 Copyright (c) 2021, Marco Faroni CNR-STIIMA marco.faroni@stiima.cnr.it
@@ -35,20 +39,40 @@ using namespace graph;
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Base class of a reward function.
+ *
+ * The reward measures how useful the last iteration was, and it is given to
+ * the policy for every goal that was expanded.
+ */
 class RewardBase
 {
 public:
+  /**
+   * @brief Constructor.
+   * @param logger Logger.
+   */
   RewardBase(const cnr_logger::TraceLoggerPtr &logger):
     logger_(logger)
   {};
 
+  /**
+   * @brief Compute the reward of the last iteration.
+   * @param costs Current cost of each goal.
+   * @param utopias Utopia (lower bound) of each goal.
+   * @param best_cost Current best cost.
+   * @return Reward.
+   */
   virtual double getReward(const std::vector<double>& costs, const std::vector<double>& utopias, const double& best_cost) = 0;
 
 protected:
-  cnr_logger::TraceLoggerPtr logger_;
-  double last_best_cost_ = std::numeric_limits<double>::infinity();
+  cnr_logger::TraceLoggerPtr logger_;  ///< Logger.
+  double last_best_cost_ = std::numeric_limits<double>::infinity();  ///< Best cost at the previous call.
 
 };
+/**
+ * @brief Shared pointer to a RewardBase.
+ */
 typedef std::shared_ptr<RewardBase> RewardBasePtr;
 
 

@@ -1,3 +1,7 @@
+/**
+ * @file reward_relative_improvement.h
+ * @brief Relative improvement reward (default reward).
+ */
 #pragma once
 /*
 Copyright (c) 2021, Marco Faroni CNR-STIIMA marco.faroni@stiima.cnr.it
@@ -31,13 +35,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Reward is the relative improvement of the best cost since the last call, in percent:
+ * 100*(last_best - best)/last_best. It is 0 until a first solution exists.
+ */
 class RewardRelativeImprovement: public RewardBase
 {
 public:
+  /**
+   * @brief Constructor.
+   * @param logger Logger.
+   */
   RewardRelativeImprovement(const cnr_logger::TraceLoggerPtr &logger):
     RewardBase(logger)
   {};
 
+  /**
+   * @copydoc RewardBase::getReward
+   */
   double getReward(const std::vector<double>& costs, const std::vector<double>& utopias, const double& best_cost)
   {
     double reward = 0.0;
@@ -50,6 +65,9 @@ public:
   };
 
 };
+/**
+ * @brief Shared pointer to a RewardRelativeImprovement.
+ */
 typedef std::shared_ptr<RewardRelativeImprovement> RewardRelativeImprovementPtr;
 
 

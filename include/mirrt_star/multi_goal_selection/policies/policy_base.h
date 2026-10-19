@@ -1,3 +1,7 @@
+/**
+ * @file policy_base.h
+ * @brief Base class of the goal selection policies.
+ */
 #pragma once
 /*
 Copyright (c) 2021, Marco Faroni CNR-STIIMA marco.faroni@stiima.cnr.it
@@ -37,9 +41,21 @@ using namespace graph;
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Base class of a goal selection policy.
+ *
+ * A policy returns, at each iteration, the probability of expanding each goal,
+ * and it is updated with the reward obtained after each expansion.
+ */
 class PolicyBase
 {
 public:
+  /**
+   * @brief Constructor.
+   * @param name Parameter namespace of the policy.
+   * @param n_goals Number of goals (arms).
+   * @param logger Logger.
+   */
   PolicyBase(const std::string& name,
              const int& n_goals,
              const cnr_logger::TraceLoggerPtr &logger):
@@ -51,16 +67,30 @@ public:
     std::fill(goals_probabilities_.begin(), goals_probabilities_.end(), 0.0);
   }
 
+  /**
+   * @brief Probability of expanding each goal at the next iteration.
+   */
   virtual std::vector<double> getProbabilities() = 0;
+  /**
+   * @brief Update the policy after goal @p i_goal was expanded.
+   * @param i_goal Goal index.
+   * @param reward Reward obtained.
+   */
   virtual void updateState(const int& i_goal, const double& reward) = 0;
+  /**
+   * @brief Short description of the policy.
+   */
   virtual std::string toString() = 0;
 
 protected:
-  int n_goals_ = 0;
-  std::vector<double> goals_probabilities_;
-  std::mt19937 gen_;
-  cnr_logger::TraceLoggerPtr logger_;
+  int n_goals_ = 0;  ///< Number of goals.
+  std::vector<double> goals_probabilities_;  ///< Last computed probabilities.
+  std::mt19937 gen_;  ///< Random number generator.
+  cnr_logger::TraceLoggerPtr logger_;  ///< Logger.
 };
+/**
+ * @brief Shared pointer to a PolicyBase.
+ */
 typedef std::shared_ptr<PolicyBase> PolicyBasePtr;
 
 

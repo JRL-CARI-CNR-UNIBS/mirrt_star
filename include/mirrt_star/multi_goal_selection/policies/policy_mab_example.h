@@ -1,3 +1,8 @@
+/**
+ * @file policy_mab_example.h
+ * @brief Example of a custom multi-armed bandit policy.
+ * @warning Not yet ported from ROS1 (uses ROS_ERROR): it does not compile and is not used.
+ */
 #pragma once
 /*
 Copyright (c) 2021, Marco Faroni CNR-STIIMA marco.faroni@stiima.cnr.it
@@ -31,6 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Example MAB policy: selects an arm with probability proportional to its squared expected reward.
+ */
 class PolicyMABExample: public PolicyMAB
 {
 public:
@@ -72,6 +80,9 @@ public:
   }
 
 };
+/**
+ * @brief Shared pointer to a PolicyMABExample.
+ */
 typedef std::shared_ptr<PolicyMABExample> PolicyMABExamplePtr;
 
 }

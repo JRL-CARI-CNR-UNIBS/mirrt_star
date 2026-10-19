@@ -1,3 +1,7 @@
+/**
+ * @file reward_bernoulli.h
+ * @brief Bernoulli reward.
+ */
 #pragma once
 /*
 Copyright (c) 2021, Marco Faroni CNR-STIIMA marco.faroni@stiima.cnr.it
@@ -31,13 +35,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Reward is 1 if the best cost improved (by more than 1e-4) since the last call, 0 otherwise.
+ */
 class RewardBernoulli: public RewardBase
 {
 public:
+  /**
+   * @brief Constructor.
+   * @param logger Logger.
+   */
   RewardBernoulli(const cnr_logger::TraceLoggerPtr &logger):
     RewardBase(logger)
   {};
 
+  /**
+   * @copydoc RewardBase::getReward
+   */
   double getReward(const std::vector<double>& costs, const std::vector<double>& utopias, const double& best_cost)
   {
     double reward = (best_cost < last_best_cost_-1e-4) ? 1.0 : 0.0;
@@ -46,6 +60,9 @@ public:
   };
 
 };
+/**
+ * @brief Shared pointer to a RewardBernoulli.
+ */
 typedef std::shared_ptr<RewardBernoulli> RewardBernoulliPtr;
 
 

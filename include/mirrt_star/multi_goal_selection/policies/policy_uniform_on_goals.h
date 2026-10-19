@@ -1,3 +1,8 @@
+/**
+ * @file policy_uniform_on_goals.h
+ * @brief Uniform goal selection.
+ * @warning Its constructor does not match PolicyMAB (missing logger): it does not compile and is not used.
+ */
 #pragma once
 /*
 Copyright (c) 2021, Marco Faroni CNR-STIIMA marco.faroni@stiima.cnr.it
@@ -31,6 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Selects one goal uniformly at random at every iteration.
+ */
 class PolicyUniformOnGoals: public PolicyMAB
 {
 public:
@@ -51,6 +59,9 @@ public:
   };
 
 };
+/**
+ * @brief Shared pointer to a PolicyUniformOnGoals.
+ */
 typedef std::shared_ptr<PolicyUniformOnGoals> PolicyUniformOnGoalsPtr;
 
 }

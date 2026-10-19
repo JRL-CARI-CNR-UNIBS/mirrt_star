@@ -1,3 +1,8 @@
+/**
+ * @file policy_uniform_on_volume.h
+ * @brief Goal selection proportional to the volume of each informed set.
+ * @warning Not yet ported from ROS1 (uses ROS_* macros): it does not compile and is not used.
+ */
 #pragma once
 /*
 Copyright (c) 2021, Marco Faroni CNR-STIIMA marco.faroni@stiima.cnr.it
@@ -31,6 +36,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Selects a goal with probability proportional to the volume of its informed set.
+ *
+ * Requires the BestCost reward and warm start (the warm-start rewards are the utopias).
+ * Before a first solution is found, goals are selected uniformly.
+ */
 class PolicyUniformOnVolume: public PolicyMAB
 {
 public:
@@ -104,6 +115,9 @@ protected:
   std::vector<double> volume_factors_sums_;
 
 };
+/**
+ * @brief Shared pointer to a PolicyUniformOnVolume.
+ */
 typedef std::shared_ptr<PolicyUniformOnVolume> PolicyUniformOnVolumePtr;
 
 }

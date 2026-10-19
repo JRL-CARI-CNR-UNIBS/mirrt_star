@@ -1,3 +1,7 @@
+/**
+ * @file policy_mab_egreedy.h
+ * @brief Epsilon-greedy multi-armed bandit policy.
+ */
 #pragma once
 
 #include <mirrt_star/multi_goal_selection/policies/policy_mab.h>
@@ -6,17 +10,31 @@
 namespace multi_goal_selection
 {
 
+/**
+ * @brief Epsilon-greedy multi-armed bandit policy.
+ *
+ * With probability epsilon a random arm is pulled, otherwise the arm with the highest
+ * expected reward (arms never pulled are tried first).
+ *
+ * Parameters read under the policy namespace:
+ * - @c epsilon_coef (double, default 0.2): exploration probability epsilon;
+ * - @c epsilon_exp (double, default 1.0): if < 1, epsilon is multiplied by this value at every update;
+ * - @c reward_gain (double, default 1.0): gain used by the adaptive epsilon;
+ * - @c egreedy_forgetting_factor (double, default 0.0): adaptive epsilon (currently forced to 0);
+ * - @c egreedy_reward_forgetting_factor (double, default 0.0): if > 0, expected rewards are an
+ *   exponential moving average; otherwise they are the sample mean.
+ */
 class PolicyMABEGreedy : public PolicyMAB
 {
 
 protected:
-  double epsilon_coef_; //epsilon (random play prob) - epsilon_base/(current)t
+  double epsilon_coef_; //epsilon (random play prob) - epsilon_base/(current)t  ///< Exploration probability.
                       //epsilonbase = cK/d2
-  double epsilon_exp_;
-  double egreedy_forgetting_factor_;
-  double egreedy_reward_forgetting_factor_;
-  double reward_gain_;
-  std::vector<int> pulled_arms_;
+  double epsilon_exp_;  ///< Decay factor of epsilon.
+  double egreedy_forgetting_factor_;  ///< Forgetting factor of the adaptive epsilon.
+  double egreedy_reward_forgetting_factor_;  ///< Forgetting factor of the expected rewards.
+  double reward_gain_;  ///< Reward gain of the adaptive epsilon.
+  std::vector<int> pulled_arms_;  ///< Unused.
 
 // @MARCO: essendo ros free non ci sono, ti servono? se si occorre pensare a un modo per portarli fuori
 //  ros::Publisher eps_pub_ = nh_.advertise<std_msgs::Float64>("eps_greedy", 1000);
@@ -25,6 +43,12 @@ protected:
 //  std_msgs::Float64 msg_;
 
 public:
+  /**
+   * @brief Constructor. Reads the parameters listed in the class description.
+   * @param name Parameter namespace.
+   * @param n_goals Number of arms.
+   * @param logger Logger.
+   */
   PolicyMABEGreedy(const std::string& name,
                    const int& n_goals,
                    const cnr_logger::TraceLoggerPtr &logger) :
@@ -59,6 +83,9 @@ public:
 
   }
   
+  /**
+   * @brief Epsilon-greedy arm selection.
+   */
   virtual int selectNextArm()
   {
 
@@ -85,6 +112,11 @@ public:
     }
   }
 
+  /**
+   * @brief Update the expected reward of the pulled arm and decay epsilon.
+   * @param i_goal Pulled arm.
+   * @param reward Reward obtained.
+   */
   virtual void updateState(const int& i_goal, const double& reward)
   {
     if (epsilon_exp_<1.0)
@@ -127,6 +159,9 @@ public:
     */
   }
 
+  /**
+   * @brief Policy name and current epsilon.
+   */
   virtual std::string toString()
   {
     std::string str="Egreedy Policy with epsilon_coef_=";
@@ -135,6 +170,9 @@ public:
   }
 
 };
+/**
+ * @brief Shared pointer to a PolicyMABEGreedy.
+ */
 typedef std::shared_ptr<PolicyMABEGreedy> PolicyMABEGreedyPtr;
 
 } //namespace

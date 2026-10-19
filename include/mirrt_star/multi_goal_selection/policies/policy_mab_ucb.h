@@ -1,3 +1,9 @@
+/**
+ * @file policy_mab_ucb.h
+ * @brief UCB1 multi-armed bandit policy.
+ * @warning Not yet ported from ROS1 (uses ros::NodeHandle): it does not compile and is not used
+ * by GoalSelectionManager.
+ */
 #pragma once
 
 #include <mirrt_star/multi_goal_selection/policies/policy_mab.h>
@@ -5,6 +11,11 @@
 namespace multi_goal_selection
 {
 
+/**
+ * @brief UCB1 policy: pulls the arm maximizing mean reward + sqrt(alpha*ln(n)/n_i).
+ *
+ * Parameter: @c ucb_alpha (double, default 1.0).
+ */
 class PolicyMABUCB : public PolicyMAB
 {
 
@@ -61,6 +72,9 @@ public:
   }
 
 };
+/**
+ * @brief Shared pointer to a PolicyMABUCB.
+ */
 typedef std::shared_ptr<PolicyMABUCB> PolicyMABUCBPtr;
 
 } //namespace

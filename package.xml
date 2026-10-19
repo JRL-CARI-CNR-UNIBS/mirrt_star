@@ -2,7 +2,7 @@
 <package format="3">
   <name>mirrt_star</name>
   <version>0.0.0</version>
-  <description>The graph_core package</description>
+  <description>Multi-goal informed RRT* (MI-RRT*) path planner for graph_core</description>
 
   <maintainer email="cesare.tonola@unibs.it">Cesare Tonola</maintainer>
   <maintainer email="manuel.beschi@unibs.it">Manuel Beschi</maintainer>
