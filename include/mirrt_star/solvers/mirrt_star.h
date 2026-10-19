@@ -130,6 +130,7 @@ namespace graph
       double cost_at_last_clean = std::numeric_limits<double>::infinity();  ///< Best cost when the start tree was last pruned.
       unsigned int iter_ = 0;  ///< Number of calls to update().
       int best_goal_index = -1;  ///< Index of the goal with the best solution (-1 if none).
+      int best_utopia_goal_index_ = -1;  ///< Index of the goal with the lowest utopia (-1 if none).
       double r_rewire_ = 1.;  ///< RRT* rewiring radius.
       double local_bias_ = 0.3;  ///< Probability of sampling inside the tube (adapted online).
       double reward_ = 1.0;  ///< Gain of the local bias adaptation.
@@ -266,6 +267,20 @@ namespace graph
       std::vector<NodePtr> getGoals()
       {
         return goal_nodes_;
+      }
+      /**
+       * @brief Get the lowest utopia (lower bound of the cost) among the goals.
+       */
+      double getBestUtopia() const
+      {
+        return best_utopia_;
+      }
+      /**
+       * @brief Get the utopia tolerance used to discard goals.
+       */
+      double getUtopiaTolerance() const
+      {
+        return utopia_tolerance_;
       }
       /**
        * @brief Prune the start tree, removing nodes outside the informed sets of the active goals.
