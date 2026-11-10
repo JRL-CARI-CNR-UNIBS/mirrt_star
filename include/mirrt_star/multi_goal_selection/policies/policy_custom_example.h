@@ -53,7 +53,7 @@ public:
 
   void updateState(const int& i_goal, const double& reward)
   {
-//    CNR_INFO(logger_,"update state custom example");
+//    GC_INFO(logger_,"update state custom example");
   }
 
   std::string toString()

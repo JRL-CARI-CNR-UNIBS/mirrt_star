@@ -254,7 +254,7 @@ Parameters read under the namespace `name`:
 ##### `GoalSelectionManager`
 
 ```cpp
-GoalSelectionManager(const std::string &name, const cnr_logger::TraceLoggerPtr &logger, const unsigned int &n_goals, const unsigned int &n_dof)
+GoalSelectionManager(const graph::core::ParamMap &params, const graph::core::LoggerPtr &logger, const unsigned int &n_goals, const unsigned int &n_dof)
 ```
 
 Constructor.
@@ -263,7 +263,7 @@ Reads the parameters and creates policy and reward function.
 
 **Parameters:**
 
-- `name`: Parameter namespace.
+- `params`: Parameters (policy_type, policy_name, reward_fcn, warm_start_reward and the policy ones).
 - `logger`: Logger.
 - `n_goals`: Number of goals.
 - `n_dof`: Number of degrees of freedom (used by volume-based policies).
@@ -319,7 +319,7 @@ True if the `warm_start_reward` parameter is set.
 | `do_warm_start_` | `bool` | Warm start flag (parameter `warm_start_reward`). |
 | `policy_` | `std::shared_ptr< multi_goal_selection::PolicyBase >` | Goal selection policy. |
 | `reward_fcn_` | `std::shared_ptr< multi_goal_selection::RewardBase >` | Reward function. |
-| `logger_` | `cnr_logger::TraceLoggerPtr` | Pointer to a TraceLogger instance for logging. |
+| `logger_` | `graph::core::LoggerPtr` | Pointer to the logger. |
 
 ### Free functions and types
 
@@ -397,14 +397,14 @@ A policy returns, at each iteration, the probability of expanding each goal, and
 ##### `PolicyBase`
 
 ```cpp
-PolicyBase(const std::string &name, const int &n_goals, const cnr_logger::TraceLoggerPtr &logger)
+PolicyBase(const std::string &name, const int &n_goals, const graph::core::LoggerPtr &logger)
 ```
 
 Constructor.
 
 **Parameters:**
 
-- `name`: Parameter namespace of the policy.
+- `name`: Name of the policy.
 - `n_goals`: Number of goals (arms).
 - `logger`: Logger.
 
@@ -444,7 +444,7 @@ Short description of the policy.
 | `n_goals_` | `int` | Number of goals. |
 | `goals_probabilities_` | `std::vector< double >` | Last computed probabilities. |
 | `gen_` | `std::mt19937` | Random number generator. |
-| `logger_` | `cnr_logger::TraceLoggerPtr` | Logger. |
+| `logger_` | `graph::core::LoggerPtr` | Logger. |
 
 ### Free functions and types
 
@@ -532,14 +532,14 @@ Each goal is an arm. At every iteration exactly one arm, chosen by `selectNextAr
 ##### `PolicyMAB`
 
 ```cpp
-PolicyMAB(const std::string &name, const int &n_goals, const cnr_logger::TraceLoggerPtr &logger)
+PolicyMAB(const std::string &name, const int &n_goals, const graph::core::LoggerPtr &logger)
 ```
 
 Constructor.
 
 **Parameters:**
 
-- `name`: Parameter namespace of the policy.
+- `name`: Name of the policy.
 - `n_goals`: Number of goals (arms).
 - `logger`: Logger.
 
@@ -681,7 +681,7 @@ Parameters read under the policy namespace:
 ##### `PolicyMABEGreedy`
 
 ```cpp
-PolicyMABEGreedy(const std::string &name, const int &n_goals, const cnr_logger::TraceLoggerPtr &logger)
+PolicyMABEGreedy(const std::string &name, const graph::core::ParamMap &params, const int &n_goals, const graph::core::LoggerPtr &logger)
 ```
 
 Constructor.
@@ -690,7 +690,8 @@ Reads the parameters listed in the class description.
 
 **Parameters:**
 
-- `name`: Parameter namespace.
+- `name`: Name of the policy.
+- `params`: Parameters of the policy.
 - `n_goals`: Number of arms.
 - `logger`: Logger.
 
@@ -1131,7 +1132,7 @@ The reward measures how useful the last iteration was, and it is given to the po
 ##### `RewardBase`
 
 ```cpp
-RewardBase(const cnr_logger::TraceLoggerPtr &logger)
+RewardBase(const graph::core::LoggerPtr &logger)
 ```
 
 Constructor.
@@ -1160,7 +1161,7 @@ Compute the reward of the last iteration.
 
 | Member | Type | Description |
 |---|---|---|
-| `logger_` | `cnr_logger::TraceLoggerPtr` | Logger. |
+| `logger_` | `graph::core::LoggerPtr` | Logger. |
 | `last_best_cost_` | `double` | Best cost at the previous call. |
 
 ### Free functions and types
@@ -1188,7 +1189,7 @@ Reward is 1 if the best cost improved (by more than 1e-4) since the last call, 0
 ##### `RewardBernoulli`
 
 ```cpp
-RewardBernoulli(const cnr_logger::TraceLoggerPtr &logger)
+RewardBernoulli(const graph::core::LoggerPtr &logger)
 ```
 
 Constructor.
@@ -1240,7 +1241,7 @@ Used by `PolicyUniformOnVolume`.
 ##### `RewardBestCost`
 
 ```cpp
-RewardBestCost(const cnr_logger::TraceLoggerPtr &logger)
+RewardBestCost(const graph::core::LoggerPtr &logger)
 ```
 
 Constructor.
@@ -1292,7 +1293,7 @@ It is 0 until a first solution exists.
 ##### `RewardRelativeImprovement`
 
 ```cpp
-RewardRelativeImprovement(const cnr_logger::TraceLoggerPtr &logger)
+RewardRelativeImprovement(const graph::core::LoggerPtr &logger)
 ```
 
 Constructor.
@@ -1354,14 +1355,14 @@ The function `MIRRTStarPlugin::init()` must be called afterwards.
 ##### `init`
 
 ```cpp
-virtual bool init(const std::string &param_ns, const graph::core::MetricsPtr &metrics, const graph::core::CollisionCheckerPtr &checker, const graph::core::SamplerPtr &sampler, const graph::core::GoalCostFunctionPtr &goal_cost_fcn, const cnr_logger::TraceLoggerPtr &logger)
+virtual bool init(const graph::core::ParamMap &params, const graph::core::MetricsPtr &metrics, const graph::core::CollisionCheckerPtr &checker, const graph::core::SamplerPtr &sampler, const graph::core::GoalCostFunctionPtr &goal_cost_fcn, const graph::core::LoggerPtr &logger)
 ```
 
 init Initialise the object, defining its main attributes.
 
 **Parameters:**
 
-- `param_ns`: defines the namespace under which parameter are searched for using cnr_param library.
+- `params`: parameters of the solver (see graph_core/params.h); the solver reads them in config().
 - `metrics`: The metrics used to evaluate paths.
 - `checker`: The collision checker for checking collisions.
 - `sampler`: The sampler for generating random configurations.
@@ -1395,7 +1396,7 @@ Typical use:
 
 ```cpp
 auto solver = std::make_shared<graph::mirrt_star::MultigoalSolver>(metrics, checker, sampler, goal_cost_fcn, logger);
-solver->config("/my_planner/mirrt_star");
+solver->config(params);  // graph::core::ParamMap, e.g. filled from ROS 2 parameters
 solver->addStart(start_node);
 for (const auto& goal : goals)
   solver->addGoal(goal, direct_connection_time, goal_cost);
@@ -1405,7 +1406,7 @@ while (time_left)
   solver->update(solution);  // true when the best solution improved
 ```
 
-Parameters read by `config()` under `param_ns` (besides those of graph::core::TreeSolver):
+Parameters read by `config()` from `params` (besides those of graph::core::TreeSolver):
 
 - `rewire_radius` (double, default 2*max_distance): RRT* rewiring radius;
 - `mixed_strategy` (bool, default true): sample also inside a tube around the current solution;
@@ -1422,7 +1423,7 @@ Parameters read by `config()` under `param_ns` (besides those of graph::core::Tr
 ##### `MultigoalSolver`
 
 ```cpp
-MultigoalSolver(const MetricsPtr &metrics, const CollisionCheckerPtr &checker, const SamplerPtr &sampler, const GoalCostFunctionPtr &goal_cost_fcn, const cnr_logger::TraceLoggerPtr &logger)
+MultigoalSolver(const MetricsPtr &metrics, const CollisionCheckerPtr &checker, const SamplerPtr &sampler, const GoalCostFunctionPtr &goal_cost_fcn, const graph::core::LoggerPtr &logger)
 ```
 
 Constructor.
@@ -1440,14 +1441,14 @@ Constructor.
 ##### `config`
 
 ```cpp
-virtual bool config(const std::string &param_ns) override
+virtual bool config(const graph::core::ParamMap &params) override
 ```
 
 Read the parameters (see class description).
 
 **Parameters:**
 
-- `param_ns`: Parameter namespace.
+- `params`: Parameters of the solver (see the class description).
 
 **Returns:** False if the base TreeSolver configuration fails.
 

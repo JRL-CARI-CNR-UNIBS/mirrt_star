@@ -45,7 +45,7 @@ public:
    * @brief Constructor.
    * @param logger Logger.
    */
-  RewardBestCost(const cnr_logger::TraceLoggerPtr &logger):
+  RewardBestCost(const graph::core::LoggerPtr &logger):
     RewardBase(logger)
   {};
 

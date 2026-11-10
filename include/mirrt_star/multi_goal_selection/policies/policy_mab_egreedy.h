@@ -45,41 +45,34 @@ protected:
 public:
   /**
    * @brief Constructor. Reads the parameters listed in the class description.
-   * @param name Parameter namespace.
+   * @param name Name of the policy.
+   * @param params Parameters of the policy.
    * @param n_goals Number of arms.
    * @param logger Logger.
    */
   PolicyMABEGreedy(const std::string& name,
+                   const graph::core::ParamMap& params,
                    const int& n_goals,
-                   const cnr_logger::TraceLoggerPtr &logger) :
+                   const graph::core::LoggerPtr &logger) :
     PolicyMAB(name, n_goals,logger)
   {
     pull_counter_ = std::vector<int>(n_goals_, 0);
     expected_reward_ = std::vector<double>(n_goals_, 0.0);
 
 
-    get_param(logger_,name,"epsilon_coef",epsilon_coef_,0.2);
-    get_param(logger_,name,"reward_gain",reward_gain_,1.0);
-    get_param(logger_,name,"egreedy_forgetting_factor",egreedy_forgetting_factor_,0.0);
-    get_param(logger_,name,"egreedy_reward_forgetting_factor",egreedy_reward_forgetting_factor_,0.0);
-    get_param(logger_,name,"epsilon_exp",epsilon_exp_,1.0);
+    graph::core::get_param(logger_, params, "epsilon_coef",epsilon_coef_,0.2);
+    graph::core::get_param(logger_, params, "reward_gain",reward_gain_,1.0);
+    graph::core::get_param(logger_, params, "egreedy_forgetting_factor",egreedy_forgetting_factor_,0.0);
+    graph::core::get_param(logger_, params, "egreedy_reward_forgetting_factor",egreedy_reward_forgetting_factor_,0.0);
+    graph::core::get_param(logger_, params, "epsilon_exp",epsilon_exp_,1.0);
 
     if(egreedy_forgetting_factor_!=0.0)
     {
-      CNR_ERROR(logger_,"egreedy_forgetting_factor_ > 0 and epsilon_exp < 1. Setting egreedy_forgetting_factor_=0.");
+      GC_ERROR(logger_,"egreedy_forgetting_factor_ > 0 and epsilon_exp < 1. Setting egreedy_forgetting_factor_=0.");
       egreedy_forgetting_factor_=0.0;
     }
 
-    CNR_WARN(logger_,"E-greedy initialized with epsilon=%f, "
-             "reward_gain=%f, "
-             "egreedy_forgetting_factor_=%f, "
-             "egreedy_reward_forgetting_factor_=%f, "
-             "epsilon_exp_=%f",
-             epsilon_coef_,
-             reward_gain_,
-             egreedy_forgetting_factor_,
-             egreedy_reward_forgetting_factor_,
-             epsilon_exp_);
+    GC_WARN(logger_, "E-greedy initialized with epsilon=" << epsilon_coef_ << ", reward_gain=" << reward_gain_ << ", egreedy_forgetting_factor_=" << egreedy_forgetting_factor_ << ", egreedy_reward_forgetting_factor_=" << egreedy_reward_forgetting_factor_ << ", epsilon_exp_=" << epsilon_exp_);
 
   }
   

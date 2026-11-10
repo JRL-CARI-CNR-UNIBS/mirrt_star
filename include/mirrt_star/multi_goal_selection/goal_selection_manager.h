@@ -32,7 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <mirrt_star/multi_goal_selection/policies/policy_base.h>
 #include <mirrt_star/multi_goal_selection/rewards/reward_base.h>
-#include <cnr_logger/cnr_logger.h>
+#include <graph_core/logger.h>
+#include <graph_core/params.h>
 #include <graph_core/util.h>
 
 using namespace graph::core;
@@ -73,13 +74,13 @@ public:
 //  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   /**
    * @brief Constructor. Reads the parameters and creates policy and reward function.
-   * @param name Parameter namespace.
+   * @param params Parameters (policy_type, policy_name, reward_fcn, warm_start_reward and the policy ones).
    * @param logger Logger.
    * @param n_goals Number of goals.
    * @param n_dof Number of degrees of freedom (used by volume-based policies).
    */
-  GoalSelectionManager(const std::string& name,
-                       const cnr_logger::TraceLoggerPtr &logger,
+  GoalSelectionManager(const graph::core::ParamMap& params,
+                       const graph::core::LoggerPtr &logger,
                        const unsigned int& n_goals,
                        const unsigned int& n_dof);
   /**
@@ -115,13 +116,11 @@ protected:
   std::shared_ptr<multi_goal_selection::RewardBase> reward_fcn_;  ///< Reward function.
 
   /**
-   * @brief Pointer to a TraceLogger instance for logging.
+   * @brief Pointer to the logger.
    *
-   * This member variable represents a pointer to a TraceLogger instance, allowing
-   * to perform logging operations. TraceLogger is a part of the cnr_logger library.
-   * Ensure that the logger is properly configured and available for use.
+   * Logger used for messages (see graph_core/logger.h); it can be null.
    */
-  cnr_logger::TraceLoggerPtr logger_;
+  graph::core::LoggerPtr logger_;
 };
 
 }

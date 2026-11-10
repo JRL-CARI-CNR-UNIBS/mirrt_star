@@ -28,7 +28,9 @@ target_link_libraries(mirrt_star_tutorial PRIVATE mirrt_star::mirrt_star)
 
 ## 2. Write the parameters
 
-Parameters are read with `cnr_param`. Create `config/mirrt_star_tutorial.yaml`:
+The solver reads its parameters from a `graph::core::ParamMap` passed to `config()`. Here they are
+loaded from a YAML file; in a ROS 2 node you would copy them from the node parameters. Create
+`config/mirrt_star_tutorial.yaml`:
 
 ```yaml
 mirrt_star_tutorial:
@@ -53,13 +55,7 @@ mirrt_star_tutorial:
   epsilon_coef: 0.2
 ```
 
-Load the file in the parameter server before running the program:
-
-```bash
-cnr_param_server --path-to-file config/mirrt_star_tutorial.yaml
-```
-
-Every parameter has a default value, so you can also start with an empty namespace and tune later.
+Every parameter has a default value, so you can also start with an empty map and tune later.
 
 ## 3. Build the problem
 
@@ -74,8 +70,13 @@ Every parameter has a default value, so you can also start with an empty namespa
 
 int main(int argc, char** argv)
 {
-  // Logger (see cnr_logger for the configuration file format)
-  auto logger = std::make_shared<cnr_logger::TraceLogger>("mirrt_star_tutorial", "config/logger_param.yaml");
+  // Logger printing INFO and above on the terminal (see graph_core/logger.h)
+  graph::core::LoggerPtr logger =
+      std::make_shared<graph::core::ConsoleLogger>("mirrt_star_tutorial", graph::core::LogLevel::Info);
+
+  // Parameters under "mirrt_star_tutorial" in the YAML file
+  graph::core::ParamMap params = graph::core::paramsFromYAML(
+      YAML::LoadFile("config/mirrt_star_tutorial.yaml")["mirrt_star_tutorial"]);
 
   // 3-DOF configuration space in [-2.5, 2.5]^3
   const size_t dof = 3;
@@ -93,7 +94,7 @@ int main(int argc, char** argv)
 
   auto solver = std::make_shared<graph::mirrt_star::MultigoalSolver>(metrics, checker, sampler,
                                                                      goal_cost_fcn, logger);
-  if (!solver->config("/mirrt_star_tutorial"))
+  if (!solver->config(params))
     return 1;
 ```
 
@@ -143,7 +144,7 @@ When the start and the goal can be connected directly, the goal immediately has 
   while (solver->canImprove())
   {
     if (solver->update(solution))
-      CNR_INFO(logger, "Improved solution, cost = " << solution->cost());
+      GC_INFO(logger, "Improved solution, cost = " << solution->cost());
 
     double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
     if (elapsed > max_time)
@@ -152,12 +153,12 @@ When the start and the goal can be connected directly, the goal immediately has 
 
   if (!solver->solved())
   {
-    CNR_ERROR(logger, "No solution found");
+    GC_ERROR(logger, "No solution found");
     return 1;
   }
 
-  CNR_INFO(logger, "Best cost: " << solution->cost() << "\n" << *solution);
-  CNR_INFO(logger, "Solver state:\n" << *solver);  // status of each goal
+  GC_INFO(logger, "Best cost: " << solution->cost() << "\n" << *solution);
+  GC_INFO(logger, "Solver state:\n" << *solver);  // status of each goal
   return 0;
 }
 ```
@@ -202,7 +203,7 @@ solvers by name with `cnr_class_loader` can use it without linking to `mirrt_sta
 cnr_class_loader::MultiLibraryClassLoader loader(false);
 loader.loadLibrary("libmirrt_star.so");
 auto plugin = loader.createInstance<graph::core::TreeSolverPlugin>("graph::mirrt_star::MIRRTStarPlugin");
-plugin->init(param_ns, metrics, checker, sampler, goal_cost_fcn, logger);
+plugin->init(params, metrics, checker, sampler, goal_cost_fcn, logger);
 graph::core::TreeSolverPtr solver = plugin->getSolver();
 ```
 

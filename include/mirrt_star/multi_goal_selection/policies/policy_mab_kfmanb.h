@@ -58,46 +58,37 @@ public:
     if (!nh_.getParam("sigma_obs", tmp))
     {
       tmp = 0.01;
-      CNR_DEBUG(logger_,"%s/sigma_obs is not set. Default: %f",nh_.getNamespace().c_str(),tmp);
+      GC_DEBUG(logger_, nh_.getNamespace().c_str() << "/sigma_obs is not set. Default: " << tmp);
     }
     sigma_obs_2_ = tmp*tmp;
 
     if (!nh_.getParam("sigma_tr", tmp))
     {
       tmp = 0.1;
-      CNR_DEBUG(logger_,"%s/sigma_tr is not set. Default: %f",nh_.getNamespace().c_str(),tmp);
+      GC_DEBUG(logger_, nh_.getNamespace().c_str() << "/sigma_tr is not set. Default: " << tmp);
     }
     sigma_tr_2_ = tmp*tmp;
 
     if (!nh_.getParam("sigma_arms", tmp))
     {
       tmp = 0.2;
-      CNR_DEBUG(logger_,"%s/sigma_arms is not set. Default: %f",nh_.getNamespace().c_str(),tmp);
+      GC_DEBUG(logger_, nh_.getNamespace().c_str() << "/sigma_arms is not set. Default: " << tmp);
     }
     std::fill(sigma_arms_2_.begin(), sigma_arms_2_.end(), tmp*tmp);
 
     if (!nh_.getParam("sigma_obs_dyn", sigma_obs_dyn_))
     {
-      CNR_DEBUG(logger_,"%s/sigma_obs_dyn is not set. Default: false",nh_.getNamespace().c_str());
+      GC_DEBUG(logger_, nh_.getNamespace().c_str() << "/sigma_obs_dyn is not set. Default: false");
     }
     if (sigma_obs_dyn_)
     {
       if (!nh_.getParam("sigma_gain", sigma_gain_))
       {
-        CNR_DEBUG(logger_,"%s/sigma_gain is not set. Default: %f",nh_.getNamespace().c_str(),sigma_gain_);
+        GC_DEBUG(logger_, nh_.getNamespace().c_str() << "/sigma_gain is not set. Default: " << sigma_gain_);
       }
     }
 
-    CNR_DEBUG(logger_,"KFMANB initialized with sigma_obs=%f, "
-             "sigma_tr=%f, "
-             "eta=%f, "
-             "reward_max=%f, "
-             "sigma_arm (max)=%f, ",
-             std::sqrt(sigma_obs_2_),
-             std::sqrt(sigma_tr_2_),
-             eta_,
-             vectorMax(expected_reward_),
-             std::sqrt(vectorMax(sigma_arms_2_) ));
+    GC_DEBUG(logger_, "KFMANB initialized with sigma_obs=" << std::sqrt(sigma_obs_2_) << ", sigma_tr=" << std::sqrt(sigma_tr_2_) << ", eta=" << eta_ << ", reward_max=" << vectorMax(expected_reward_) << ", sigma_arm (max)=" << std::sqrt(vectorMax(sigma_arms_2_) ) << ", ");
 
   }
 
@@ -114,17 +105,17 @@ public:
     }
 
     /*
-    CNR_INFO(logger_,"\nexp reward = ");
+    GC_INFO(logger_,"\nexp reward = ");
     for(int idx=0; idx<n_goals_; idx++)
     {
       std::cout << expected_reward_[idx] << "+" << std::sqrt(sigma_arms_2_[idx]) << ", ";
     }
-    CNR_INFO(logger_,"\nsampled rewards = ");
+    GC_INFO(logger_,"\nsampled rewards = ");
     for(int idx=0; idx<n_goals_; idx++)
     {
       std::cout << sampled_rewards_[idx] << ", ";
     }
-    CNR_INFO(logger_,"best = %d, val = %f", vectorMaxIndex(sampled_rewards_), sampled_rewards_[vectorMaxIndex(sampled_rewards_)]);
+    GC_INFO(logger_, "best = " << vectorMaxIndex(sampled_rewards_) << ", val = " << sampled_rewards_[vectorMaxIndex(sampled_rewards_)]);
     */
     return vectorMaxIndex(sampled_rewards_);
   }
@@ -138,7 +129,7 @@ public:
 
     if (std_devs.size() != (std::size_t)n_goals_)
     {
-      CNR_FATAL(logger_, "Wrong size of vector std_devs.");
+      GC_FATAL(logger_, "Wrong size of vector std_devs.");
       return false;
     }
 

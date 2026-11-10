@@ -30,7 +30,7 @@ public:
 
     if (!nh_.getParam("ucb_alpha", alpha_))
     {
-      CNR_DEBUG(logger_,"%s/ucb_alpha is not set. Deafult: 1.0",nh_.getNamespace().c_str());
+      GC_DEBUG(logger_, nh_.getNamespace().c_str() << "/ucb_alpha is not set. Deafult: 1.0");
       alpha_=1.0;
     }
   }

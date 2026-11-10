@@ -52,7 +52,7 @@ public:
    * @brief Constructor.
    * @param logger Logger.
    */
-  RewardBase(const cnr_logger::TraceLoggerPtr &logger):
+  RewardBase(const graph::core::LoggerPtr &logger):
     logger_(logger)
   {};
 
@@ -66,7 +66,7 @@ public:
   virtual double getReward(const std::vector<double>& costs, const std::vector<double>& utopias, const double& best_cost) = 0;
 
 protected:
-  cnr_logger::TraceLoggerPtr logger_;  ///< Logger.
+  graph::core::LoggerPtr logger_;  ///< Logger.
   double last_best_cost_ = std::numeric_limits<double>::infinity();  ///< Best cost at the previous call.
 
 };

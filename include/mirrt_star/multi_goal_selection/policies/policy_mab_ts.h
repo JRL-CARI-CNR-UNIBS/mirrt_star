@@ -32,13 +32,13 @@ public:
     double alpha=1.0;
     if (!nh_.getParam("ts_alpha", alpha))
     {
-      CNR_DEBUG(logger_,"%s/ts_alpha is not set. Deafult: 1.0",nh_.getNamespace().c_str());
+      GC_DEBUG(logger_, nh_.getNamespace().c_str() << "/ts_alpha is not set. Deafult: 1.0");
     }
 
     double beta=1.0;
     if (!nh_.getParam("ts_beta", beta))
     {
-      CNR_DEBUG(logger_,"%s/ts_beta is not set. Deafult: 1.0",nh_.getNamespace().c_str());
+      GC_DEBUG(logger_, nh_.getNamespace().c_str() << "/ts_beta is not set. Deafult: 1.0");
     }
 
     alphas_ = std::vector<double>(n_goals_, alpha);

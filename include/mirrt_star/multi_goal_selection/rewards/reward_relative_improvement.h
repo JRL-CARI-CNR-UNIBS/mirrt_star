@@ -46,7 +46,7 @@ public:
    * @brief Constructor.
    * @param logger Logger.
    */
-  RewardRelativeImprovement(const cnr_logger::TraceLoggerPtr &logger):
+  RewardRelativeImprovement(const graph::core::LoggerPtr &logger):
     RewardBase(logger)
   {};
 

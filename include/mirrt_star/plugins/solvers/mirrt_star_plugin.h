@@ -58,7 +58,7 @@ public:
 
   /**
    * @brief init Initialise the object, defining its main attributes.
-   * @param param_ns defines the namespace under which parameter are searched for using cnr_param library.
+   * @param params parameters of the solver (see graph_core/params.h); the solver reads them in config().
    * @param metrics The metrics used to evaluate paths.
    * @param checker The collision checker for checking collisions.
    * @param sampler The sampler for generating random configurations.
@@ -66,12 +66,12 @@ public:
    * @param logger The logger for logging messages.
    * @return True if correctly initialised, False if already initialised.
    */
-  virtual bool init(const std::string& param_ns,
+  virtual bool init(const graph::core::ParamMap& params,
                     const graph::core::MetricsPtr& metrics,
                     const graph::core::CollisionCheckerPtr& checker,
                     const graph::core::SamplerPtr& sampler,
                     const graph::core::GoalCostFunctionPtr& goal_cost_fcn,
-                    const cnr_logger::TraceLoggerPtr& logger)
+                    const graph::core::LoggerPtr& logger)
   {
 
     solver_ = std::make_shared<graph::mirrt_star::MultigoalSolver>(metrics,
@@ -79,6 +79,7 @@ public:
                                                                    sampler,
                                                                    goal_cost_fcn,
                                                                    logger);
+    (void)params;
     return true;
   }
 };

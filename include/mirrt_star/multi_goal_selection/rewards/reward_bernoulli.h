@@ -45,7 +45,7 @@ public:
    * @brief Constructor.
    * @param logger Logger.
    */
-  RewardBernoulli(const cnr_logger::TraceLoggerPtr &logger):
+  RewardBernoulli(const graph::core::LoggerPtr &logger):
     RewardBase(logger)
   {};
 

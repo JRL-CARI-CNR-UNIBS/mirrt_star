@@ -48,12 +48,12 @@ class PolicyMAB: public PolicyBase
 public:
   /**
    * @brief Constructor.
-   * @param name Parameter namespace of the policy.
+   * @param name Name of the policy.
    * @param n_goals Number of goals (arms).
    * @param logger Logger.
    */
   PolicyMAB(const std::string& name, const int& n_goals,
-            const cnr_logger::TraceLoggerPtr &logger) :
+            const graph::core::LoggerPtr &logger) :
     PolicyBase(name, n_goals,logger)
   {
     pull_counter_.resize(n_goals);
@@ -88,7 +88,7 @@ public:
   {
     if (rewards.size() != (std::size_t)n_goals_)
     {
-      CNR_FATAL(logger_, "Wrong size of vector rewards.");
+      GC_FATAL(logger_, "Wrong size of vector rewards.");
       return false;
     }
     initial_reward_ = rewards;

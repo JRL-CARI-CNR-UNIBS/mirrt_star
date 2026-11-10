@@ -38,7 +38,7 @@ Goals that cannot beat the current best solution are discarded early.
 ## Dependencies
 
 - [graph_core](https://github.com/JRL-CARI-CNR-UNIBS/graph_core) (and its dependencies:
-  Eigen3, `cnr_logger`, `cnr_param`, `cnr_class_loader`)
+  Eigen3, yaml-cpp, `cnr_class_loader`)
 - C++20 compiler, CMake ≥ 3.16
 
 ## Build
@@ -74,7 +74,7 @@ target_link_libraries(my_target PUBLIC mirrt_star::mirrt_star)
 
 auto solver = std::make_shared<graph::mirrt_star::MultigoalSolver>(metrics, checker, sampler,
                                                                    goal_cost_fcn, logger);
-solver->config("/my_planner/mirrt_star");   // read parameters with cnr_param
+solver->config(params);                     // graph::core::ParamMap
 solver->addStart(std::make_shared<graph::core::Node>(q_start, logger));
 for (const Eigen::VectorXd& q : goal_configurations)
   solver->addGoal(std::make_shared<graph::core::Node>(q, logger), 0.1 /* direct connection time */);
@@ -89,7 +89,8 @@ See [docs/TUTORIAL.md](docs/TUTORIAL.md) for a complete walkthrough, including t
 
 ## Parameters
 
-Parameters are read by `MultigoalSolver::config(param_ns)` under `param_ns`.
+Parameters are read by `MultigoalSolver::config(params)` from a `graph::core::ParamMap`
+(see `graph_core/params.h`); missing parameters take their default value.
 
 | Name | Type | Default | Description |
 |---|---|---|---|

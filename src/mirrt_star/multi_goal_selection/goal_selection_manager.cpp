@@ -43,8 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace multi_goal_selection
 {
 
-GoalSelectionManager::GoalSelectionManager(const std::string& name,
-                                           const cnr_logger::TraceLoggerPtr& logger,
+GoalSelectionManager::GoalSelectionManager(const graph::core::ParamMap& params,
+                                           const graph::core::LoggerPtr& logger,
                                            const unsigned int& n_goals,
                                            const unsigned int& n_dof)
 {
@@ -52,34 +52,34 @@ GoalSelectionManager::GoalSelectionManager(const std::string& name,
   goal_number_ = n_goals;
 
 
-  get_param(logger_,name,"policy_type",policy_type_,std::string("MultiArmedBandit"));
-  get_param(logger_,name,"policy_name",policy_name_,std::string("eGreedy"));
-  get_param(logger_,name,"reward_fcn",reward_fcn_name_,std::string("RelativeImprovement"));
-  get_param(logger_,name,"warm_start_reward",do_warm_start_,false);
+  graph::core::get_param(logger_, params, "policy_type",policy_type_,std::string("MultiArmedBandit"));
+  graph::core::get_param(logger_, params, "policy_name",policy_name_,std::string("eGreedy"));
+  graph::core::get_param(logger_, params, "reward_fcn",reward_fcn_name_,std::string("RelativeImprovement"));
+  graph::core::get_param(logger_, params, "warm_start_reward",do_warm_start_,false);
 
   if (!policy_type_.compare("MultiArmedBandit"))
   {
-    CNR_INFO(logger_,"Policy type: " << policy_type_);
+    GC_INFO(logger_,"Policy type: " << policy_type_);
     if (!policy_name_.compare("eGreedy"))
     {
-      policy_ = std::make_shared<multi_goal_selection::PolicyMABEGreedy>(name,goal_number_,logger_);
-      CNR_INFO(logger_,"Policy name: " << policy_name_);
+      policy_ = std::make_shared<multi_goal_selection::PolicyMABEGreedy>(policy_name_, params, goal_number_, logger_);
+      GC_INFO(logger_,"Policy name: " << policy_name_);
     }
     // @MARCO: UNCOMMENT THIS WHEN HEADERS ARE OK
     //    else if (!policy_name_.compare("UCB1"))
     //    {
     //      policy_ = std::make_shared<multi_goal_selection::PolicyMABUCB>(name,goal_number_,logger_);
-    //      CNR_INFO(logger_,"Policy name: " << policy_name_);
+    //      GC_INFO(logger_,"Policy name: " << policy_name_);
     //    }
     //    else if (!policy_name_.compare("Thomson"))
     //    {
     //      policy_ = std::make_shared<multi_goal_selection::PolicyMABTS>(name,goal_number_,logger_);
-    //      CNR_INFO(logger_,"Policy name: " << policy_name_);
+    //      GC_INFO(logger_,"Policy name: " << policy_name_);
     //    }
     //    else if (!policy_name_.compare("PolicyUniformOnGoals"))
     //    {
     //      policy_ = std::make_shared<multi_goal_selection::PolicyUniformOnGoals>(name,goal_number_,logger_);
-    //      CNR_INFO(logger_,"Policy name: " << policy_name_);
+    //      GC_INFO(logger_,"Policy name: " << policy_name_);
     //    }
     //    else if (!policy_name_.compare("PolicyUniformOnVolume"))
     //    {
@@ -87,58 +87,58 @@ GoalSelectionManager::GoalSelectionManager(const std::string& name,
     //      if (reward_fcn_name_.compare("BestCost"))
     //      {
     //        reward_fcn_name_ = "BestCost";
-    //        CNR_WARN(logger_,"Reward fcn automatically set to BestCost because policy required by UniformOnVolume policy.");
+    //        GC_WARN(logger_,"Reward fcn automatically set to BestCost because policy required by UniformOnVolume policy.");
     //      }
     //      if (!do_warm_start_)
     //      {
     //        do_warm_start_ = true;
-    //        CNR_WARN(logger_,"Warm start automatically set because required by UniformOnVolume policy.");
+    //        GC_WARN(logger_,"Warm start automatically set because required by UniformOnVolume policy.");
     //      }
-    //      CNR_INFO(logger_,"Policy name: " << policy_name_);
+    //      GC_INFO(logger_,"Policy name: " << policy_name_);
     //    }
     //    else
     //    {
-    //      CNR_FATAL(logger_,"unexpected policy_name_ : " << policy_name_);
+    //      GC_FATAL(logger_,"unexpected policy_name_ : " << policy_name_);
     //    }
     //  }
     //  else if (!policy_type_.compare("Custom"))
     //  {
-    //    CNR_INFO(logger_,"Policy type: " << policy_type_);
+    //    GC_INFO(logger_,"Policy type: " << policy_type_);
     //    if (!policy_name_.compare("Custom1"))
     //    {
     //      policy_ = std::make_shared<multi_goal_selection::PolicyCustomExample>(name,goal_number_,logger_);
-    //      CNR_INFO(logger_,"Policy name: " << policy_name_);
+    //      GC_INFO(logger_,"Policy name: " << policy_name_);
     //    }
     //    else
     //    {
-    //      CNR_FATAL(logger_,"unexpected policy_name_ : " << policy_name_);
+    //      GC_FATAL(logger_,"unexpected policy_name_ : " << policy_name_);
     //    }
   }
   else
   {
-    CNR_FATAL(logger_,"unexpected policy_type_ : " << policy_type_);
+    GC_FATAL(logger_,"unexpected policy_type_ : " << policy_type_);
   }
 
 
   if (!reward_fcn_name_.compare("RelativeImprovement"))
   {
     reward_fcn_ = std::make_shared<multi_goal_selection::RewardRelativeImprovement>(logger_);
-    CNR_INFO(logger_,"Reward name: RelativeImprovement");
+    GC_INFO(logger_,"Reward name: RelativeImprovement");
   }
   // @MARCO: UNCOMMENT THIS WHEN HEADERS ARE OK
   //  else if (!reward_fcn_name_.compare("Bernoulli"))
   //  {
   //    reward_fcn_ = std::make_shared<multi_goal_selection::RewardBernoulli>(logger_);
-  //    CNR_INFO(logger_,"Reward name: Bernoulli");
+  //    GC_INFO(logger_,"Reward name: Bernoulli");
   //  }
   //  else if (!reward_fcn_name_.compare("BestCost"))
   //  {
   //    reward_fcn_ = std::make_shared<multi_goal_selection::RewardBestCost>(logger_);
-  //    CNR_INFO(logger_,"Reward name: BestCost");
+  //    GC_INFO(logger_,"Reward name: BestCost");
   //  }
   else
   {
-    CNR_FATAL(logger_,"unexpected reward_fcn_name_ : " << reward_fcn_name_);
+    GC_FATAL(logger_,"unexpected reward_fcn_name_ : " << reward_fcn_name_);
   }
 }
 

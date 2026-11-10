@@ -52,13 +52,13 @@ class PolicyBase
 public:
   /**
    * @brief Constructor.
-   * @param name Parameter namespace of the policy.
+   * @param name Name of the policy.
    * @param n_goals Number of goals (arms).
    * @param logger Logger.
    */
   PolicyBase(const std::string& name,
              const int& n_goals,
-             const cnr_logger::TraceLoggerPtr &logger):
+             const graph::core::LoggerPtr &logger):
     gen_(time(0)),
     logger_(logger)
   {
@@ -86,7 +86,7 @@ protected:
   int n_goals_ = 0;  ///< Number of goals.
   std::vector<double> goals_probabilities_;  ///< Last computed probabilities.
   std::mt19937 gen_;  ///< Random number generator.
-  cnr_logger::TraceLoggerPtr logger_;  ///< Logger.
+  graph::core::LoggerPtr logger_;  ///< Logger.
 };
 /**
  * @brief Shared pointer to a PolicyBase.

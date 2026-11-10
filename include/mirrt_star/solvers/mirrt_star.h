@@ -75,7 +75,7 @@ namespace graph
      * Typical use:
      * @code
      * auto solver = std::make_shared<graph::mirrt_star::MultigoalSolver>(metrics, checker, sampler, goal_cost_fcn, logger);
-     * solver->config("/my_planner/mirrt_star");
+     * solver->config(params);  // graph::core::ParamMap, e.g. filled from ROS 2 parameters
      * solver->addStart(start_node);
      * for (const auto& goal : goals)
      *   solver->addGoal(goal, direct_connection_time, goal_cost);
@@ -85,7 +85,7 @@ namespace graph
      *   solver->update(solution);  // true when the best solution improved
      * @endcode
      *
-     * Parameters read by config() under @c param_ns (besides those of graph::core::TreeSolver):
+     * Parameters read by config() from @c params (besides those of graph::core::TreeSolver):
      * - @c rewire_radius (double, default 2*max_distance): RRT* rewiring radius;
      * - @c mixed_strategy (bool, default true): sample also inside a tube around the current solution;
      * - @c bidirectional (bool, default true): grow one tree from each goal as well;
@@ -178,7 +178,7 @@ namespace graph
                       const CollisionCheckerPtr &checker,
                       const SamplerPtr &sampler,
                       const GoalCostFunctionPtr &goal_cost_fcn,
-                      const cnr_logger::TraceLoggerPtr &logger) : TreeSolver(metrics, checker, sampler, goal_cost_fcn, logger),
+                      const graph::core::LoggerPtr &logger) : TreeSolver(metrics, checker, sampler, goal_cost_fcn, logger),
                                                                   gen_(time(0))
       {
         ud_ = std::uniform_real_distribution<double>(0, 1);
@@ -186,10 +186,10 @@ namespace graph
 
       /**
        * @brief Read the parameters (see class description).
-       * @param param_ns Parameter namespace.
+       * @param params Parameters of the solver (see the class description).
        * @return False if the base TreeSolver configuration fails.
        */
-      virtual bool config(const std::string &param_ns) override;
+      virtual bool config(const graph::core::ParamMap &params) override;
       /**
        * @brief Create the goal selection manager for the current set of goals.
        * Called by finalizeProblem().
